@@ -1,6 +1,7 @@
 package com.huashui.auth.service;
 
 import com.huashui.auth.domain.dto.LoginDTO;
+import com.huashui.auth.domain.dto.PasswordDTO;
 import com.huashui.auth.domain.vo.CaptchaVO;
 import com.huashui.auth.domain.vo.LoginVO;
 import com.huashui.common.response.Result;
@@ -17,4 +18,6 @@ public interface authService {
     Result<LoginVO> userLogin(LoginDTO dto);
 
     void logout();
+
+    void updatePassword(PasswordDTO dto);
 }

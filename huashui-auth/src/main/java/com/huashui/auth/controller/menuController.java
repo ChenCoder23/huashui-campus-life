@@ -49,10 +49,10 @@ public class menuController {
     /**
      * 修改菜单
      */
-    @PutMapping("/menus/{id}") // 编辑菜单名称和图标  启用或者禁用菜单 调整排序 — 菜单顺序
+    @PutMapping("/menus")
     @Operation(summary = "修改菜单")
-    public Result<Void> updateMenu(@PathVariable Long id, @RequestBody MenuDTO dto) {
-        menuService.updateMenu(id,dto);
+    public Result<Void> updateMenu(@RequestBody MenuDTO dto) {
+        menuService.updateMenu(dto);
         return Result.ok();
     }
 
@@ -73,7 +73,7 @@ public class menuController {
     @Operation(summary = "查询角色菜单权限树")
     public Result<List<Menu>> getRoleMenus(@PathVariable Long id) {
         List<Menu> menuTree = menuService.getMenuByRoleId(id);
-        return Result.ok();
+        return Result.ok(menuTree);
     }
 
     /**
@@ -82,6 +82,7 @@ public class menuController {
     @PutMapping("/roles/{id}/menus")
     @Operation(summary = "设置角色菜单权限")
     public Result<Void> setRoleMenus(@PathVariable Long id, @RequestBody List<Long> menuIds) {
+        // todo
         menuService.setRolesMenu(id,menuIds);
         return Result.ok();
     }

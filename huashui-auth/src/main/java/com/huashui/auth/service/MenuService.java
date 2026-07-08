@@ -18,11 +18,13 @@ public interface MenuService extends IService<Menu> {
 
     void addMenu(MenuDTO dto);
 
-    void updateMenu(Long id, Object dto);
+    void updateMenu(MenuDTO dto);
 
     void dropMenu(Long id);
 
     List<Menu> getMenuByRoleId(Long id);
 
     void setRolesMenu(Long id, List<Long> menuIds);
+
+    List<Menu> getMenuByUserId();
 }

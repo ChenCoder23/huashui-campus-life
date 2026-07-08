@@ -1,11 +1,17 @@
 package com.huashui.auth.controller;
 
 import com.huashui.auth.domain.dto.PasswordDTO;
+import com.huashui.auth.domain.pojo.Menu;
+import com.huashui.auth.service.MenuService;
+import com.huashui.auth.service.authService;
 import com.huashui.common.response.Result;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * @author
@@ -17,11 +23,10 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "个人权限中心")
 public class profileController {
 
-
-
-
-
-
+    @Autowired
+    private MenuService menuService;
+    @Autowired
+    private authService authService;
 
         /**
          * 获取当前登录用户权限信息
@@ -31,9 +36,9 @@ public class profileController {
          */
         @GetMapping("/profile")
         @Operation(summary = "获取当前用户权限信息")
-        public Result<?> getProfile() {
-
-            return Result.ok();
+        public Result<List<Menu>> getProfile() {
+            List<Menu> menuTree = menuService.getMenuByUserId();
+            return Result.ok(menuTree);
         }
 
 
@@ -45,8 +50,8 @@ public class profileController {
         @PutMapping("/password")
         @Operation(summary = "修改密码")
         public Result<Void> updatePassword(@RequestBody PasswordDTO dto) {
-
             // todo 管理员修改不需要验证码但是学生和工作人员需要填写验证码
+            authService.updatePassword(dto);
             return Result.ok();
         }
 

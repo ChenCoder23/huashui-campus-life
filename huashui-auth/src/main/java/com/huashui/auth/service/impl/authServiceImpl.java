@@ -8,6 +8,7 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.digest.BCrypt;
 import com.huashui.api.client.user.UserClient;
 import com.huashui.auth.domain.dto.LoginDTO;
+import com.huashui.auth.domain.dto.PasswordDTO;
 import com.huashui.auth.domain.vo.CaptchaVO;
 import com.huashui.auth.domain.vo.LoginVO;
 import com.huashui.common.domain.dto.UserSimpleInfo;
@@ -146,6 +147,13 @@ public class authServiceImpl implements authService {
     @Override
     public void logout() {
         StpUtil.logout();
+    }
+
+
+    // 修改密码
+    @Override
+    public void updatePassword(PasswordDTO dto) {
+        //判断当前用户身份
     }
 
 

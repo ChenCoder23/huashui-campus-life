@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
  * @author
  */
 
-@Tag(name = "认证中心", description = "登录、注册、注销、验证码")
+@Tag(name = "登录中心", description = "登录、注册、注销、验证码")
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
