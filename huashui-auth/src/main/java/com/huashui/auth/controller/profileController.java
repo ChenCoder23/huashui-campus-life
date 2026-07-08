@@ -1,9 +1,11 @@
 package com.huashui.auth.controller;
 
+import com.huashui.auth.domain.dto.PasswordDTO;
+import com.huashui.common.response.Result;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * @author
@@ -12,9 +14,41 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
+@Tag(name = "个人权限中心")
 public class profileController {
 
-    // todo /auth/profile	GET	登录后一次性返回：用户信息 + 角色列表 + 权限码扁平列表 + 菜单树
 
-    // todo /auth/password	PUT	修改密码（原密码 → 新密码）
-}
+
+
+
+
+
+        /**
+         * 获取当前登录用户权限信息
+         *
+         * 返回：
+         * 该用户的菜单树菜单树
+         */
+        @GetMapping("/profile")
+        @Operation(summary = "获取当前用户权限信息")
+        public Result<?> getProfile() {
+
+            return Result.ok();
+        }
+
+
+        /**
+         * 修改密码
+         *
+         * 原密码 -> 新密码
+         */
+        @PutMapping("/password")
+        @Operation(summary = "修改密码")
+        public Result<Void> updatePassword(@RequestBody PasswordDTO dto) {
+
+            // todo 管理员修改不需要验证码但是学生和工作人员需要填写验证码
+            return Result.ok();
+        }
+
+    }
+

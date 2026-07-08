@@ -1,9 +1,16 @@
 package com.huashui.auth.controller;
 
+import com.huashui.auth.domain.dto.MenuDTO;
+import com.huashui.auth.domain.pojo.Menu;
+import com.huashui.auth.service.MenuService;
+import com.huashui.common.response.Result;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * @author
@@ -12,15 +19,73 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
+@Tag(name = "菜单管理中心")
 public class menuController {
 
-    // todo /auth/menus	GET	全量菜单树（供超管配置用）
 
-    // todo /auth/menus	POST	新增菜单
+    @Autowired
+    private MenuService menuService;
 
-    // todo /auth/menus/{id}	PUT/DELETE	编辑 / 删除菜单
+    /**
+     * 获取全量菜单树（供超级管理员配置权限）
+     */
+    @GetMapping("/menus")
+    @Operation(summary = "获取全量菜单树")
+    public Result<List<Menu>> getMenuTree() {
+        List<Menu> menuTree = menuService.getMenuTree();
+        return Result.ok(menuTree);
+    }
 
-    // todo /auth/roles/{id}/menus	GET/PUT	查询 / 设置角色拥有的菜单权限
+    /**
+     * 新增菜单
+     */
+    @PostMapping("/menus")
+    @Operation(summary = "新增菜单")
+    public Result<Void> addMenu(@RequestBody MenuDTO dto) {
+        menuService.addMenu(dto);
+        return Result.ok();
+    }
 
-    // todo /auth/users/{id}/roles	GET/PUT	查询 / 设置用户拥有的角色
+    /**
+     * 修改菜单
+     */
+    @PutMapping("/menus/{id}") // 编辑菜单名称和图标  启用或者禁用菜单 调整排序 — 菜单顺序
+    @Operation(summary = "修改菜单")
+    public Result<Void> updateMenu(@PathVariable Long id, @RequestBody MenuDTO dto) {
+        menuService.updateMenu(id,dto);
+        return Result.ok();
+    }
+
+    /**
+     * 删除菜单
+     */
+    @DeleteMapping("/menus/{id}")
+    @Operation(summary = "删除菜单")
+    public Result<Void> deleteMenu(@PathVariable Long id) {
+        menuService.dropMenu(id);
+        return Result.ok();
+    }
+
+    /**
+     * 查询角色拥有的菜单权限
+     */
+    @GetMapping("/roles/{id}/menus")
+    @Operation(summary = "查询角色菜单权限树")
+    public Result<List<Menu>> getRoleMenus(@PathVariable Long id) {
+        List<Menu> menuTree = menuService.getMenuByRoleId(id);
+        return Result.ok();
+    }
+
+    /**
+     * 设置角色菜单权限
+     */
+    @PutMapping("/roles/{id}/menus")
+    @Operation(summary = "设置角色菜单权限")
+    public Result<Void> setRoleMenus(@PathVariable Long id, @RequestBody List<Long> menuIds) {
+        menuService.setRolesMenu(id,menuIds);
+        return Result.ok();
+    }
+
+
+
 }

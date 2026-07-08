@@ -2,7 +2,6 @@ package com.huashui.user.api;
 
 import com.huashui.common.domain.dto.UserSimpleInfo;
 import com.huashui.common.enums.LoginType;
-import com.huashui.user.domain.pojo.SysUser;
 import com.huashui.user.service.SysUserService;
 import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -28,5 +27,10 @@ public class userClient {
     }
 
 
+    //根据用户id跟新登录时间
+    @GetMapping("/loginTime")
+    public void updateLoginTime(Long userId){
+        userService.updateLoginTime(userId);
+    }
 
 }

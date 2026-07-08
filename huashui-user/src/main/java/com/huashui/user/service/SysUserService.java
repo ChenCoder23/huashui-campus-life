@@ -14,4 +14,6 @@ import com.huashui.user.domain.pojo.SysUser;
 public interface SysUserService extends IService<SysUser> {
 
     UserSimpleInfo getUserInfoByAccount(String account, LoginType type);
+
+    void updateLoginTime(Long userId);
 }

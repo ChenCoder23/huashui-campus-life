@@ -8,11 +8,14 @@ import com.huashui.common.domain.dto.UserSimpleInfo;
 import com.huashui.common.enums.error.ErrorType;
 import com.huashui.common.enums.LoginType;
 import com.huashui.common.exception.BusinessException;
+import com.huashui.common.utils.UserContext;
 import com.huashui.user.domain.pojo.SysUser;
 import com.huashui.user.mapper.SysUserMapper;
 import com.huashui.user.service.SysUserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
 
 /**
  * 用户Service实现类
@@ -47,9 +50,18 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
             throw new BusinessException(ErrorType.USER_NOT_FOUND);
         }
         UserSimpleInfo userSimpleInfo = BeanUtil.copyProperties(user, UserSimpleInfo.class);
+
+
         return userSimpleInfo;
     }
 
+    //更新用户的最后登录时间
+    @Override
+    public void updateLoginTime(Long userId) {
+        SysUser user = new SysUser();
+        user.setId(userId);
+        user.setLastLoginTime(LocalDateTime.now());
+    }
 
 
 }

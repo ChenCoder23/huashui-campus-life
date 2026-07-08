@@ -78,7 +78,9 @@ public class authServiceImpl implements authService {
     //用户的账密登录
     @Override
     public Result<LoginVO> userLogin(LoginDTO dto) {
-        // todo 对验证码判空
+        if (StrUtil.isBlank(dto.getCaptchaCode())){
+            throw new BusinessException("验证码不能为空");
+        }
         // 1. 验证码校验
         if (StrUtil.isNotBlank(dto.getCaptchaKey())) {
             //获取缓存里的验证码
@@ -96,13 +98,13 @@ public class authServiceImpl implements authService {
 
         String account = dto.getAccount();
         LoginType loginType = dto.getLoginType();
-        //账号不能为null
-        if (account == null) {
-            throw new BusinessException(ErrorType.ACCOUNT_NOT_NULL);
+        //账号不能为null,密码判空
+        if (StrUtil.isBlank(account) || StrUtil.isBlank(dto.getPassword())) {
+            throw new BusinessException("账号密码不能为空");
         }
-        log.info("开始调用user服务, account={}, loginType={}",account,loginType);
+
         UserSimpleInfo userInfo = userClient.getUserInfo(account, loginType);
-        log.info("user服务返回结果: {}", userInfo);
+
         if (userInfo == null) {
             throw new BusinessException(ErrorType.USER_NOT_FOUND);
         }
@@ -111,26 +113,28 @@ public class authServiceImpl implements authService {
             throw new BusinessException("账号已被冻结，请联系管理员");
         }
 
-       /* // 3. 验证密码 BCrypt加密存储
+        // 3. 验证密码 BCrypt加密存储
+        //todo 密码错误建议增加失败次数限制 登录成功后清除失败次数
         if (!BCrypt.checkpw(dto.getPassword(), userInfo.getPassword())) {
             throw new BusinessException("用户名或密码错误");
-        }*/
+        }
         // 4. Sa-Token 登录
         log.info("准备执行SaToken登录");
 
         StpUtil.login(userInfo.getId());
 
         log.info("SaToken登录完成");
-        // 5.todo  更新最后登录时间
+        // 5. 更新最后登录时间
+        userClient.updateLoginTime(userInfo.getId());
 
         // 6. 返回
 
         LoginVO loginVO = LoginVO.builder()
                 .token(StpUtil.getTokenValue())
-                 .userId(userInfo.getId())
+                .userId(userInfo.getId())
                 .username(userInfo.getUsername())
                 .realName(userInfo.getRealName())
-
+                // todo 添加角色信息
                 .avatar(userInfo.getAvatar())
                 .build();
         return Result.ok(loginVO);
