@@ -1,0 +1,151 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: huashui-gateway
+
+  main:
+    # 允许 common 模块的 RedisConfig 覆盖 Boot 自动配置的 redisTemplate
+    allow-bean-definition-overriding: true
+    web-application-type: reactive
+
+  config:
+    import:
+      - nacos:shared-mysql.yml?group=DEFAULT_GROUP&refresh-enabled=true
+      - nacos:shared-springdoc.yml?group=DEFAULT_GROUP&refresh-enabled=true
+      - nacos:shared-redis.yml?group=DEFAULT_GROUP&refresh-enabled=true
+      - nacos:shared-token.yml?group=DEFAULT_GROUP&refresh-enabled=true
+
+
+
+  cloud:
+    nacos:
+      server-addr: 127.0.0.1:18848
+      username: nacos
+      password: Chc23pray
+
+      discovery:
+        fail-fast: false
+
+      config:
+        refresh-enabled: true
+
+    gateway:
+      discovery:
+        locator:
+          # 启用 Nacos 服务发现自动路由（兜底）
+          enabled: true
+          lower-case-service-id: true
+      routes:
+        # ==================== 基础能力层 ====================
+        - id: huashui-auth
+          uri: lb://huashui-auth
+          predicates:
+            - Path=/auth/**
+          filters:
+            - StripPrefix=0
+
+        - id: huashui-user
+          uri: lb://huashui-user
+          predicates:
+            - Path=/user/**
+          filters:
+            - StripPrefix=0
+
+        - id: huashui-system
+          uri: lb://huashui-system
+          predicates:
+            - Path=/system/**
+          filters:
+            - StripPrefix=0
+
+        - id: huashui-storage
+          uri: lb://huashui-storage
+          predicates:
+            - Path=/storage/**
+          filters:
+            - StripPrefix=0
+
+        # ==================== 核心业务层 ====================
+        - id: huashui-dormitory
+          uri: lb://huashui-dormitory
+          predicates:
+            - Path=/dormitory/**
+          filters:
+            - StripPrefix=0
+
+        - id: huashui-repair
+          uri: lb://huashui-repair
+          predicates:
+            - Path=/repair/**
+          filters:
+            - StripPrefix=0
+
+        - id: huashui-utility
+          uri: lb://huashui-utility
+          predicates:
+            - Path=/utility/**
+          filters:
+            - StripPrefix=0
+
+        - id: huashui-evaluation
+          uri: lb://huashui-evaluation
+          predicates:
+            - Path=/evaluation/**
+          filters:
+            - StripPrefix=0
+
+        # ==================== 考勤与流程 ====================
+        - id: huashui-attendance-service
+          uri: lb://huashui-attendance-service
+          predicates:
+            - Path=/attendance/**
+          filters:
+            - StripPrefix=0
+
+        - id: huashui-leave-service
+          uri: lb://huashui-leave-service
+          predicates:
+            - Path=/leave/**
+          filters:
+            - StripPrefix=0
+
+        - id: huashui-task
+          uri: lb://huashui-task
+          predicates:
+            - Path=/task/**
+          filters:
+            - StripPrefix=0
+
+        # ==================== 消息模块 ====================
+        - id: huashui-message-announcement
+          uri: lb://huashui-message-announcement
+          predicates:
+            - Path=/announcement/**
+          filters:
+            - StripPrefix=0
+
+        - id: huashui-message-notification
+          uri: lb://huashui-message-notification
+          predicates:
+            - Path=/notification/**
+          filters:
+            - StripPrefix=0
+
+        - id: huashui-message-template
+          uri: lb://huashui-message-template
+          predicates:
+            - Path=/template/**
+          filters:
+            - StripPrefix=0
+
+        # ==================== 任务调度 ====================
+        - id: huashui-job
+          uri: lb://huashui-job
+          predicates:
+            - Path=/job/**
+          filters:
+            - StripPrefix=0
+
+
