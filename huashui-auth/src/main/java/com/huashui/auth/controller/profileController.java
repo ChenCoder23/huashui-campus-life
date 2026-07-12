@@ -55,5 +55,17 @@ public class profileController {
             return Result.ok();
         }
 
+        /**
+         * 修改头像
+         *
+         * 前端先调 huashui-storage 上传获取 URL，再调此接口更新
+         */
+        @PutMapping("/profile/avatar")
+        @Operation(summary = "修改头像")
+        public Result<Void> updateAvatar(@RequestParam String avatarUrl) {
+            authService.updateAvatar(avatarUrl);
+            return Result.ok();
+        }
+
     }
 

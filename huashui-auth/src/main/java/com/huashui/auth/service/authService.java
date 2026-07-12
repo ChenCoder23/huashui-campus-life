@@ -20,4 +20,6 @@ public interface authService {
     void logout();
 
     void updatePassword(PasswordDTO dto);
+
+    void updateAvatar(String avatarUrl);
 }

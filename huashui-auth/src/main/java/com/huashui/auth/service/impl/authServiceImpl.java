@@ -156,5 +156,12 @@ public class authServiceImpl implements authService {
         //判断当前用户身份
     }
 
+    // 修改头像
+    @Override
+    public void updateAvatar(String avatarUrl) {
+        Long userId = StpUtil.getLoginIdAsLong();
+        userClient.updateAvatar(userId, avatarUrl);
+    }
+
 
 }

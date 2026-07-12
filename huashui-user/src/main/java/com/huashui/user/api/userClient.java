@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/user/inner")
 public class userClient {
@@ -27,10 +29,17 @@ public class userClient {
     }
 
 
-    //根据用户id跟新登录时间
+    //根据用户更新新登录时间
     @GetMapping("/loginTime")
     public void updateLoginTime(Long userId){
         userService.updateLoginTime(userId);
+    }
+
+
+    // 根据Id列表查询用户信息
+    @GetMapping("/list")
+    public List<UserSimpleInfo> getUserInfoList(@RequestParam List<Long> userIds) {
+        return userService.getUserInfoList(userIds);
     }
 
 }

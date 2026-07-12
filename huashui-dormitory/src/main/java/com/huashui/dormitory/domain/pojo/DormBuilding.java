@@ -2,6 +2,7 @@ package com.huashui.dormitory.domain.pojo;
 
 import com.baomidou.mybatisplus.annotation.*;
 import com.huashui.common.enums.Status;
+import com.huashui.dormitory.Enum.RoomStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -35,7 +36,7 @@ public class DormBuilding {
     private String buildingCode;
 
     @Schema(description = "房型（FOUR-四人间，SIX-六人间）")
-    private String roomType;
+    private RoomStatus roomType;
 
     @Schema(description = "总层数")
     private Integer totalFloors;

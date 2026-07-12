@@ -1,7 +1,7 @@
 package com.huashui.dormitory.domain.pojo;
 
 import com.baomidou.mybatisplus.annotation.*;
-import com.huashui.common.enums.Status;
+import com.huashui.dormitory.Enum.BedStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -32,7 +32,7 @@ public class DormBed {
     private Long studentId;
 
     @Schema(description = "床位状态（0-空闲，1-已入住，2-预留）")
-    private Integer status;
+    private BedStatus status;
 
     @TableField(fill = FieldFill.INSERT)
     @Schema(description = "创建时间")

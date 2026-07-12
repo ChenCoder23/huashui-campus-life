@@ -1,6 +1,9 @@
 package com.huashui.dormitory.domain.pojo;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.huashui.dormitory.Enum.BalconyType;
+import com.huashui.dormitory.Enum.BathType;
+import com.huashui.dormitory.Enum.HotWaterType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -28,13 +31,13 @@ public class DormBuildingConfig {
     private Boolean hasPrivateBath;
 
     @Schema(description = "卫浴类型")
-    private String bathType;
+    private BathType bathType;
 
     @Schema(description = "是否有阳台")
     private Boolean hasBalcony;
 
     @Schema(description = "阳台类型")
-    private String balconyType;
+    private BalconyType balconyType;
 
     @Schema(description = "床铺类型")
     private String bedType;
@@ -43,7 +46,7 @@ public class DormBuildingConfig {
     private String floorType;
 
     @Schema(description = "热水供应类型")
-    private String hotWaterType;
+    private HotWaterType hotWaterType;
 
     @Schema(description = "热水供应时段")
     private String hotWaterHours;

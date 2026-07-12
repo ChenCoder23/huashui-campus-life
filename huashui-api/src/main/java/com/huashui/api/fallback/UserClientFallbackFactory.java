@@ -7,6 +7,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 @Slf4j
 @Component
 public class UserClientFallbackFactory
@@ -28,6 +30,16 @@ public class UserClientFallbackFactory
             @Override
             public void updateLoginTime(Long id) {
                 log.info("更新登录时间异常");
+            }
+
+            @Override
+            public void updateAvatar(Long userId, String avatarUrl) {
+
+            }
+
+            @Override
+            public List<UserSimpleInfo> getUserInfoList(List<Long> userIds) {
+                return List.of();
             }
         };
 

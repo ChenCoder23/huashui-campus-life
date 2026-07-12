@@ -1,9 +1,15 @@
 package com.huashui.dormitory.controller;
 
+
+import com.huashui.common.response.Result;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 /**
  * 学生首页（我的宿舍 + 室友信息）
@@ -14,13 +20,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @Tag(name = "宿舍首页")
 public class DormHomeController {
-
-    /*
-    *
-    *
-    * #	方法	路径	权限	说明
-1	GET	/dormitory/home	学生	我的宿舍信息（校区/楼栋/房间/床位/费用）
-2	GET	/dormitory/home/roommates	学生	我的室友列表（Feign 查姓名）*/
 
 
 
@@ -38,8 +37,8 @@ public class DormHomeController {
     @Operation(summary = "查询我的宿舍信息")
     public Result<?> getMyDormitory() {
 
-
-        return Result.success();
+        //使用redis
+        return Result.ok();
     }
 
 
@@ -52,8 +51,8 @@ public class DormHomeController {
     @Operation(summary = "查询我的室友列表")
     public Result<List<?>> getRoommates() {
 
-
-        return Result.success();
+        // 使用redis
+        return Result.ok();
     }
 
 

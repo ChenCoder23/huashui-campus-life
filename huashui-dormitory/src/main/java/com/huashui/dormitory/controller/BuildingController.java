@@ -1,10 +1,19 @@
 package com.huashui.dormitory.controller;
 
+import com.huashui.common.response.PageResult;
 import com.huashui.common.response.Result;
+import com.huashui.dormitory.domain.dto.BuildingDTO;
+import com.huashui.dormitory.domain.dto.BuildingPageDTO;
+import com.huashui.dormitory.domain.vo.BuildingDetailVO;
+import com.huashui.dormitory.domain.vo.BuildingPageVO;
+import com.huashui.dormitory.service.DormBuildingService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * 楼栋管理（含楼栋配置）
@@ -16,17 +25,8 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "楼栋管理")
 public class BuildingController {
 
-    /*
-    *
-    * 1	GET	/dormitory/building	超管/宿管	楼栋列表（分页，按校区筛选，宿管仅看管辖）
-2	POST	/dormitory/building	超管	新增楼栋（含配置一起建）
-3	PUT	/dormitory/building/{id}	超管	编辑楼栋
-4	DELETE	/dormitory/building/{id}	超管	删除楼栋（有房间不可删,该接口针对手误创建的情况）
-5	GET	/dormitory/building/{id}	超管/宿管	楼栋详情（含硬件配置）
-6	PUT	/dormitory/building/{id}/config	超管	更新楼栋硬件配置
-7	GET	/dormitory/building/options	登录即可	楼栋下拉（按校区筛选）
-    *
-    * */
+    @Autowired
+    private DormBuildingService buildingService;
 
 
     /**
@@ -40,13 +40,11 @@ public class BuildingController {
      */
     @GetMapping
     @Operation(summary = "楼栋分页列表")
-    public Result<?> pageBuilding(
-            @RequestParam(required = false) Long campusId,
-            @RequestParam(defaultValue = "1") Integer pageNum,
-            @RequestParam(defaultValue = "10") Integer pageSize) {
+    public Result<PageResult<BuildingPageVO>> pageBuilding(BuildingPageDTO dto){
+        buildingService.getBuildingPage(dto);
+        return Result.ok();
 
 
-        return Result.success();
     }
 
 
@@ -57,25 +55,20 @@ public class BuildingController {
      */
     @PostMapping
     @Operation(summary = "新增楼栋")
-    public Result<Void> addBuilding(
-            @RequestBody Object dto) {
-
-
-        return Result.success();
+    public Result<Void> addBuilding(@RequestBody BuildingDTO dto) {
+        buildingService.addBuilding(dto);
+        return Result.ok();
     }
 
 
     /**
      * 编辑楼栋
      */
-    @PutMapping("/{id}")
+    @PutMapping
     @Operation(summary = "编辑楼栋")
-    public Result<Void> updateBuilding(
-            @PathVariable Long id,
-            @RequestBody Object dto) {
-
-
-        return Result.success();
+    public Result<Void> updateBuilding(@RequestBody BuildingDTO dto) {
+        buildingService.updateBuilding(dto);
+        return Result.ok();
     }
 
 
@@ -83,15 +76,12 @@ public class BuildingController {
      * 删除楼栋
      *
      * 注意：
-     * 存在房间时禁止删除
+     * 有人入住的状态下无法禁用
      */
     @DeleteMapping("/{id}")
-    @Operation(summary = "删除楼栋")
-    public Result<Void> deleteBuilding(
-            @PathVariable Long id) {
-
-
-        return Result.success();
+    @Operation(summary = "禁用楼栋")
+    public Result<Void> deleteBuilding(@PathVariable Long id) {
+        return Result.ok();
     }
 
 
@@ -102,11 +92,9 @@ public class BuildingController {
      */
     @GetMapping("/{id}")
     @Operation(summary = "楼栋详情")
-    public Result<?> getBuildingDetail(
-            @PathVariable Long id) {
+    public Result<BuildingDetailVO> getBuildingDetail(@PathVariable Long id) {
 
-
-        return Result.success();
+        return Result.ok();
     }
 
 
@@ -115,12 +103,10 @@ public class BuildingController {
      */
     @PutMapping("/{id}/config")
     @Operation(summary = "更新楼栋硬件配置")
-    public Result<Void> updateBuildingConfig(
-            @PathVariable Long id,
-            @RequestBody Object dto) {
+    public Result<Void> updateBuildingConfig(@PathVariable Long id, @RequestBody Object dto) {
 
 
-        return Result.success();
+        return Result.ok();
     }
 
 
@@ -131,11 +117,10 @@ public class BuildingController {
      */
     @GetMapping("/options")
     @Operation(summary = "楼栋下拉列表")
-    public Result<List<?>> getBuildingOptions(
-            @RequestParam(required = false) Long campusId) {
+    public Result<List<?>> getBuildingOptions(@RequestParam(required = false) Long campusId) {
 
 
-        return Result.success();
+        return Result.ok();
     }
 
 

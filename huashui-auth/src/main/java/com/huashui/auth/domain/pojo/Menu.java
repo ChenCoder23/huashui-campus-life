@@ -1,9 +1,9 @@
 package com.huashui.auth.domain.pojo;
 
 import com.baomidou.mybatisplus.annotation.*;
-import com.huashui.auth.menu.HiddenEnum;
-import com.huashui.auth.menu.HomeEnum;
-import com.huashui.auth.menu.MenuType;
+import com.huashui.auth.Enum.HiddenEnum;
+import com.huashui.auth.Enum.HomeEnum;
+import com.huashui.auth.Enum.MenuType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 

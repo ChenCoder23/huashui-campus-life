@@ -1,4 +1,4 @@
-package com.huashui.auth.menu;
+package com.huashui.auth.Enum;
 
 import com.baomidou.mybatisplus.annotation.EnumValue;
 import io.swagger.v3.oas.annotations.media.Schema;

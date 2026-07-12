@@ -7,7 +7,6 @@ import com.huashui.auth.service.authService;
 import com.huashui.common.response.Result;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -33,12 +32,12 @@ public class loginController {
     }
 
 
-
     @Operation(summary = "账密登录")
     @PostMapping("/login")
     public Result<LoginVO> userLogin(LoginDTO dto) {
         return authService.userLogin(dto);
     }
+
 
     @Operation(summary = "退出登录")
     @PostMapping("/logout")
@@ -46,5 +45,7 @@ public class loginController {
         authService.logout();
         return Result.ok();
     }
+
+    // todo 验证码登录(邮箱/手机号 + 验证码)
 
 }

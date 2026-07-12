@@ -9,7 +9,14 @@ import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
-public class SysCampusServiceImpl
-        extends ServiceImpl<SysCampusMapper, SysCampus>
-        implements SysCampusService {
+public class SysCampusServiceImpl extends ServiceImpl<SysCampusMapper, SysCampus> implements SysCampusService {
+
+
+
+    //判断校区是否存在
+    @Override
+    public boolean isExist(Long campusId) {
+        SysCampus campus = getById(campusId);
+        return campus != null;
+    }
 }

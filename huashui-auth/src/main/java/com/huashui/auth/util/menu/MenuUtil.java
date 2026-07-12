@@ -47,5 +47,39 @@ public class MenuUtil {
         return roots;
     }
 
+    /**
+     * 根据菜单id判断菜单是否存在
+     *
+     * @param menus 菜单列表
+     * @param id    菜单id
+     * @return true存在 false不存在
+     */
+    public static boolean existsById(List<Menu> menus, Long id) {
+        if (menus == null || menus.isEmpty() || id == null) {
+            return false;
+        }
+
+        return menus.stream()
+                .anyMatch(menu -> id.equals(menu.getId()));
+    }
+
+
+    /**
+     * 根据菜单id判断是否存在子菜单
+     *
+     * @param menus 菜单列表
+     * @param id    菜单id
+     * @return true存在子菜单 false不存在
+     */
+    public static boolean hasChildren(List<Menu> menus, Long id) {
+        if (menus == null || menus.isEmpty() || id == null) {
+            return false;
+        }
+
+        return menus.stream()
+                .anyMatch(menu -> id.equals(menu.getParentId()));
+    }
+
+
 
 }

@@ -4,4 +4,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.huashui.dormitory.domain.pojo.SysCampus;
 
 public interface SysCampusService extends IService<SysCampus> {
+
+
+    boolean isExist(Long campusId);
 }

@@ -1,4 +1,4 @@
-package com.huashui.auth.menu;
+package com.huashui.auth.Enum;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;

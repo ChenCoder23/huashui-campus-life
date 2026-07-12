@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 
 
 import com.huashui.common.domain.dto.UserSimpleInfo;
+import com.huashui.common.enums.Status;
 import com.huashui.common.enums.error.ErrorType;
 import com.huashui.common.enums.LoginType;
 import com.huashui.common.exception.BusinessException;
@@ -16,6 +17,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 用户Service实现类
@@ -61,6 +64,21 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         SysUser user = new SysUser();
         user.setId(userId);
         user.setLastLoginTime(LocalDateTime.now());
+    }
+
+    @Override
+    public List<UserSimpleInfo> getUserInfoList(List<Long> userIds) {
+
+        List<SysUser> sysUserList =new ArrayList<>();
+
+        for (Long userId : userIds) {
+            SysUser user = lambdaQuery().eq(SysUser::getId, userId)
+                    .eq(SysUser::getStatus, Status.ENABLED).one();
+            if (user != null) {
+                sysUserList.add(user);
+            }
+        }
+        return BeanUtil.copyToList(sysUserList, UserSimpleInfo.class);
     }
 
 

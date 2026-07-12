@@ -1,9 +1,10 @@
 package com.huashui.dormitory.controller;
 
+import com.huashui.common.response.Result;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * 房间管理（含床位管理）
@@ -14,19 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @Tag(name = "房间管理")
 public class RoomController {
-    /*
-    *
-    *
-    * 1	GET	/dormitory/room	超管/宿管	房间列表（分页，按楼栋/楼层/状态筛选,宿舍管理只显示自己负责的楼栋）
-2	POST	/dormitory/room	超管	新增房间（自动生成 N 个空床位）
-3	PUT	/dormitory/room/{id}	超管	编辑房间
-4	DELETE	/dormitory/room/{id}	超管	删除房间（有人住不可删）
-5	GET	/dormitory/room/{id}	超管/宿管/学生	房间详情（含床位列表 + 入住学生）
-6	POST	/dormitory/room/batch	超管	批量初始化房间（按楼层批量生成）
-7	PUT	/dormitory/room/{id}/beds	超管	更新房间床位配置（增减床位）
-8	GET	/dormitory/room/export	超管/宿管	导出房间数据为excel表格
-    *
-    * */
+
 
 
     /**
@@ -45,9 +34,8 @@ public class RoomController {
             @RequestParam(required = false) Integer status,
             @RequestParam(defaultValue = "1") Integer pageNum,
             @RequestParam(defaultValue = "10") Integer pageSize) {
-
-
-        return Result.success();
+        //做缓存
+        return Result.ok();
     }
 
 
@@ -58,25 +46,22 @@ public class RoomController {
      */
     @PostMapping
     @Operation(summary = "新增房间")
-    public Result<Void> addRoom(
-            @RequestBody Object dto) {
+    public Result<Void> addRoom(@RequestBody Object dto) {
 
 
-        return Result.success();
+        return Result.ok();
     }
 
 
     /**
      * 编辑房间
      */
-    @PutMapping("/{id:\\d+}")
+    @PutMapping("/{id}")
     @Operation(summary = "编辑房间")
-    public Result<Void> updateRoom(
-            @PathVariable Long id,
-            @RequestBody Object dto) {
+    public Result<Void> updateRoom(@PathVariable Long id, @RequestBody Object dto) {
 
 
-        return Result.success();
+        return Result.ok();
     }
 
 
@@ -91,7 +76,7 @@ public class RoomController {
             @PathVariable Long id) {
 
 
-        return Result.success();
+        return Result.ok();
     }
 
 
@@ -108,7 +93,7 @@ public class RoomController {
             @PathVariable Long id) {
 
 
-        return Result.success();
+        return Result.ok();
     }
 
 
@@ -119,11 +104,10 @@ public class RoomController {
      */
     @PostMapping("/batch")
     @Operation(summary = "批量初始化房间")
-    public Result<Void> batchCreateRoom(
-            @RequestBody Object dto) {
+    public Result<Void> batchCreateRoom(@RequestBody Object dto) {
 
 
-        return Result.success();
+        return Result.ok();
     }
 
 
@@ -132,14 +116,14 @@ public class RoomController {
      *
      * 增加/减少床位
      */
-    @PutMapping("/{id:\\d+}/beds")
+    @PutMapping("/{id}/beds")
     @Operation(summary = "更新房间床位配置")
     public Result<Void> updateRoomBeds(
             @PathVariable Long id,
             @RequestBody Object dto) {
 
 
-        return Result.success();
+        return Result.ok();
     }
 
 

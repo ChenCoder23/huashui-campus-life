@@ -44,17 +44,20 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements Me
 
     @Override
     public void addMenu(MenuDTO dto) {
+        // todo 检查dto 属性的完整性  如果有父菜单,需要确定是否真实存在,检查是否有首页冲突
         save(BeanUtil.copyProperties(dto,Menu.class));
     }
 
     @Override
     public void updateMenu(MenuDTO dto) {
+        // 还需要删除原来的
+        // todo 检查dto 属性的完整性  如果有父菜单,需要确定是否真实存在,检查是否有首页冲突
         save(BeanUtil.copyProperties(dto,Menu.class));
     }
 
     @Override
     public void dropMenu(Long id) {
-
+        // todo 如果含有子菜单则无法删除
     }
 
     @Override

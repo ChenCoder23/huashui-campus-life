@@ -19,7 +19,6 @@ public class rolesController {
     @GetMapping("/users/{id}/roles")
     @Operation(summary = "查询用户角色")
     public Result<List<?>> getUserRoles(@PathVariable Long id) {
-
         return Result.ok();
     }
 
@@ -80,6 +79,7 @@ public class rolesController {
     public Result<Void> deleteRole(
             @PathVariable Long id) {
 
+        // todo 角色还有用户无法删除
         return Result.ok();
     }
 

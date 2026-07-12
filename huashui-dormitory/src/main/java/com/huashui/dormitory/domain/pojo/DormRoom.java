@@ -1,6 +1,8 @@
 package com.huashui.dormitory.domain.pojo;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.huashui.dormitory.Enum.RoomStatus;
+import com.huashui.dormitory.Enum.RoomType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -31,7 +33,7 @@ public class DormRoom {
     private Integer floorNumber;
 
     @Schema(description = "房型（FOUR-四人间，SIX-六人间）")
-    private String roomType;
+    private RoomType roomType;
 
     @Schema(description = "总床位数")
     private Integer totalBeds;
@@ -40,7 +42,7 @@ public class DormRoom {
     private Integer occupiedBeds;
 
     @Schema(description = "房间状态（NORMAL-正常，FULL-住满，EMPTY-空房，LOCKED-封闭）")
-    private String status;
+    private RoomStatus status;
 
     @Schema(description = "备注")
     private String remark;
