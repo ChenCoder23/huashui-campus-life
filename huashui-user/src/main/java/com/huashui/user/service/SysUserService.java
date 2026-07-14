@@ -20,4 +20,8 @@ public interface SysUserService extends IService<SysUser> {
     void updateLoginTime(Long userId);
 
     List<UserSimpleInfo> getUserInfoList(List<Long> userIds);
+
+    void updateAvatar(Long userId, String avatarUrl);
+
+    void updatePassword(Long id, String password);
 }

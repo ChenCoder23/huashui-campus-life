@@ -27,9 +27,7 @@ public class rolesController {
      */
     @PutMapping("/users/{id}/roles")
     @Operation(summary = "设置用户角色")
-    public Result<Void> setUserRoles(
-            @PathVariable Long id,
-            @RequestBody List<Long> roleIds) {
+    public Result<Void> setUserRoles(@PathVariable Long id, @RequestBody List<Long> roleIds) {
 
         return Result.ok();
     }
@@ -51,8 +49,7 @@ public class rolesController {
      */
     @PostMapping("/roles")
     @Operation(summary = "新增角色")
-    public Result<Void> addRole(
-            @RequestBody Object dto) {
+    public Result<Void> addRole(@RequestBody Object dto) {
 
         return Result.ok();
     }
@@ -63,9 +60,7 @@ public class rolesController {
      */
     @PutMapping("/roles/{id}")
     @Operation(summary = "修改角色")  // 修改角色描述和状态
-    public Result<Void> updateRole(
-            @PathVariable Long id,
-            @RequestBody Object dto) {
+    public Result<Void> updateRole(@PathVariable Long id, @RequestBody Object dto) {
 
         return Result.ok();
     }
@@ -76,8 +71,7 @@ public class rolesController {
      */
     @DeleteMapping("/roles/{id}")
     @Operation(summary = "删除角色")
-    public Result<Void> deleteRole(
-            @PathVariable Long id) {
+    public Result<Void> deleteRole(@PathVariable Long id) {
 
         // todo 角色还有用户无法删除
         return Result.ok();

@@ -14,11 +14,12 @@ import java.util.List;
 public interface UserClient {
 
 
+    //根据账号获取用户的基本信息
     @GetMapping("/user/inner/userInfo")
     UserSimpleInfo getUserInfo(@RequestParam String account , @RequestParam LoginType type);
 
     //根据用户id更新登录时间
-    @GetMapping("/loginTime")
+    @GetMapping("user/inner/loginTime")
     public void updateLoginTime(Long id);
 
     // 更新用户头像
@@ -27,8 +28,10 @@ public interface UserClient {
 
 
     // 根据Id列表查询用户信息
-    @GetMapping("/list")
+    @GetMapping("user/inner/list")
     public List<UserSimpleInfo> getUserInfoList(@RequestParam List<Long> userIds) ;
 
 
+    @GetMapping("user/inner/password")
+    void updatePassword(@RequestParam Long id,@RequestParam String password);
 }

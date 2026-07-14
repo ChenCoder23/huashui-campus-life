@@ -8,4 +8,6 @@ import com.huashui.auth.domain.pojo.SysUserRole;
  */
 public interface SysUserRoleService extends IService<SysUserRole> {
 
+    //根据用户的id获取jeus
+    String getRoleByuserId(Long userId);
 }

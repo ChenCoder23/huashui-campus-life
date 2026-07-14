@@ -32,6 +32,8 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 
     @Override
     public UserSimpleInfo getUserInfoByAccount(String account, LoginType type) {
+
+        log.info("本次登录账号:{} ,本次登录方式:{}",account,type.getDesc());
         SysUser user = null;
         switch(type){
             case PHONE:
@@ -47,6 +49,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
             case EMAIL:
                 //邮箱查询用户;
                 user = lambdaQuery().eq(SysUser::getEmail, account).one();
+                log.info("user =  {}",user);
                 break;
         }
         if(user == null){
@@ -79,6 +82,23 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
             }
         }
         return BeanUtil.copyToList(sysUserList, UserSimpleInfo.class);
+    }
+
+    @Override
+    public void updateAvatar(Long userId, String avatarUrl) {
+        lambdaUpdate()
+                .eq(SysUser::getId, userId)
+                .set(SysUser::getAvatar, avatarUrl)
+                .update();
+    }
+
+
+    //更新用户密码
+    @Override
+    public void updatePassword(Long id, String password) {
+        lambdaUpdate().eq(SysUser::getId,id)
+                .set(SysUser::getPassword,password)
+                .update();
     }
 
 

@@ -11,7 +11,14 @@ public final class RedisConstants {
     public static final String TOKEN_PREFIX = "token:";
 
     /** 验证码 */
-    public static final String CAPTCHA_PREFIX = "captcha:";
+    public static final String CAPTCHA_PREFIX = "captcha:code";
+
+
+    /** 验证码请求次数 */
+    public static final String CAPTCHA_PREFIX_NUM = "captcha:num:";
+
+    /** 账号密码不匹配次数 */
+    public static final String ACCOUNT_LOGIN_NUM = "account:login:num:";
 
     /** 短信验证码 */
     public static final String SMS_CODE_PREFIX = "sms:";

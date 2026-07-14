@@ -14,6 +14,7 @@ spring:
       - nacos:shared-springdoc.yml?group=DEFAULT_GROUP&refresh-enabled=true
       - nacos:shared-redis.yml?group=DEFAULT_GROUP&refresh-enabled=true
       - nacos:shared-token.yml?group=DEFAULT_GROUP&refresh-enabled=true
+      - nacos:shared-smtp.yml?group=DEFAULT_GROUP&refresh-enabled=true
 
 
 
@@ -33,3 +34,4 @@ spring:
 hs:
   jdbc:
     db: huashui_rbac
+

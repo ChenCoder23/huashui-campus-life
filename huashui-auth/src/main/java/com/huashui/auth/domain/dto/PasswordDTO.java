@@ -13,7 +13,11 @@ import lombok.Data;
 @Schema(description = "修改密码DTO")
 public class PasswordDTO {
 
-    @NotBlank(message = "旧密码不能为空")
+    @NotBlank(message = "账号不能为空")
+    @Schema(description = "账号")
+    private String account;
+
+
     @Schema(description = "旧密码")
     private String oldPassword;
 

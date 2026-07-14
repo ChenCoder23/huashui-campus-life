@@ -41,6 +41,11 @@ public class UserClientFallbackFactory
             public List<UserSimpleInfo> getUserInfoList(List<Long> userIds) {
                 return List.of();
             }
+
+            @Override
+            public void updatePassword(Long id, String password) {
+
+            }
         };
 
     }
