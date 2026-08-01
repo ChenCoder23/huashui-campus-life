@@ -12,6 +12,11 @@
     <packaging>jar</packaging>
     <dependencies>
         <dependency>
+            <groupId>com.huashui</groupId>
+            <artifactId>huashui-common</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
@@ -42,6 +47,12 @@
         <dependency>
             <groupId>com.huashui</groupId>
             <artifactId>huashui-common</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.springframework.data</groupId>
+                    <artifactId>spring-data-redis</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>

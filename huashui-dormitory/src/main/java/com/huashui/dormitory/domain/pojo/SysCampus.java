@@ -1,6 +1,7 @@
 package com.huashui.dormitory.domain.pojo;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.huashui.common.domain.pojo.BaseEntity;
 import com.huashui.common.enums.Status;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
@@ -16,7 +17,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @TableName("sys_campus")
 @Schema(description = "校区表")
-public class SysCampus {
+public class SysCampus extends BaseEntity {
 
     @TableId(type = IdType.AUTO)
     @Schema(description = "主键ID")

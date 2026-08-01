@@ -3,6 +3,7 @@ package com.huashui.dormitory.domain.pojo;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.huashui.common.domain.pojo.BaseEntity;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -12,7 +13,7 @@ import java.time.LocalDateTime;
  */
 @Data
 @TableName("dorm_building_manager")
-public class DormBuildingManager {
+public class DormBuildingManager extends BaseEntity {
 
     /**
      * 主键ID
@@ -35,13 +36,5 @@ public class DormBuildingManager {
      */
     private Integer status;
 
-    /**
-     * 创建时间
-     */
-    private LocalDateTime createTime;
 
-    /**
-     * 更新时间
-     */
-    private LocalDateTime updateTime;
 }

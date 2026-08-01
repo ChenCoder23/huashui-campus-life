@@ -1,6 +1,7 @@
 package com.huashui.dormitory.domain.pojo;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.huashui.common.domain.pojo.BaseEntity;
 import com.huashui.dormitory.Enum.DormRecordStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
@@ -16,7 +17,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @TableName("dorm_student_record")
 @Schema(description = "学生住宿记录表")
-public class DormStudentRecord {
+public class DormStudentRecord extends BaseEntity {
 
     @TableId(type = IdType.AUTO)
     @Schema(description = "主键ID")
@@ -46,11 +47,5 @@ public class DormStudentRecord {
     @Schema(description = "住宿状态（0-已退宿，1-在住）")
     private DormRecordStatus status;
 
-    @TableField(fill = FieldFill.INSERT)
-    @Schema(description = "创建时间")
-    private LocalDateTime createTime;
 
-    @TableField(fill = FieldFill.INSERT_UPDATE)
-    @Schema(description = "更新时间")
-    private LocalDateTime updateTime;
 }

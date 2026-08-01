@@ -1,6 +1,7 @@
 package com.huashui.dormitory.domain.pojo;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.huashui.common.domain.pojo.BaseEntity;
 import com.huashui.dormitory.Enum.RoomStatus;
 import com.huashui.dormitory.Enum.RoomType;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -17,7 +18,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @TableName("dorm_room")
 @Schema(description = "房间表")
-public class DormRoom {
+public class DormRoom  extends BaseEntity {
 
     @TableId(type = IdType.AUTO)
     @Schema(description = "主键ID")

@@ -1,10 +1,12 @@
 package com.huashui.auth.service;
 
+import com.huashui.auth.domain.dto.BindEmailDTO;
 import com.huashui.auth.domain.dto.LoginDTO;
 import com.huashui.auth.domain.dto.PasswordDTO;
 import com.huashui.auth.domain.vo.CaptchaVO;
 import com.huashui.auth.domain.vo.LoginVO;
 import com.huashui.common.response.Result;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
@@ -29,7 +31,11 @@ public interface authService {
 
     void setEmailCode(String email);
 
-    boolean verifyCode(String email, String inputCode);
+
 
     String EmailLogin(@Email String email, @NotBlank String code);
+
+    void bindEmail(@Valid BindEmailDTO dto);
+
+    void updateEmail(BindEmailDTO dto);
 }

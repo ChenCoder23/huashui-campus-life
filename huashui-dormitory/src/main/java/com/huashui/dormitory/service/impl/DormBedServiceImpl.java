@@ -9,7 +9,5 @@ import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
-public class DormBedServiceImpl
-        extends ServiceImpl<DormBedMapper, DormBed>
-        implements DormBedService {
+public class DormBedServiceImpl extends ServiceImpl<DormBedMapper, DormBed> implements DormBedService {
 }

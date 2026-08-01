@@ -2,4 +2,6 @@ com.huashui.common.config.RedisConfig
 com.huashui.common.config.JacksonConfig
 com.huashui.common.exception.GlobalExceptionHandler
 com.huashui.common.config.UserContextAutoConfiguration
+com.huashui.common.config.RabbitConfig
+com.huashui.common.config.MyMetaObjectHandler
 

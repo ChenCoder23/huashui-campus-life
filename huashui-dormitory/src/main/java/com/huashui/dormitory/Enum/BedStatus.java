@@ -1,5 +1,6 @@
 package com.huashui.dormitory.Enum;
 
+import com.baomidou.mybatisplus.annotation.EnumValue;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -21,7 +22,10 @@ public enum BedStatus {
     @Schema(description = "预留")
     RESERVED(2, "预留");
 
+
+    @EnumValue
     private final Integer code;
+
 
     private final String desc;
 }

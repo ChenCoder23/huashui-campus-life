@@ -13,8 +13,6 @@ import org.springframework.stereotype.Service;
  */
 @Slf4j
 @Service
-public class SysRoleServiceImpl
-        extends ServiceImpl<SysRoleMapper, SysRole>
-        implements SysRoleService {
+public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> implements SysRoleService {
 
 }

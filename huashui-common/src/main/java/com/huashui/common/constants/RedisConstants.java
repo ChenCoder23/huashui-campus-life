@@ -14,6 +14,9 @@ public final class RedisConstants {
     public static final String CAPTCHA_PREFIX = "captcha:code";
 
 
+    /** qq邮箱验证码验证码 */
+    public static final String EMAIL_PREFIX = "email:code";
+
     /** 验证码请求次数 */
     public static final String CAPTCHA_PREFIX_NUM = "captcha:num:";
 
@@ -31,9 +34,6 @@ public final class RedisConstants {
 
     /** 限流 */
     public static final String RATE_LIMIT_PREFIX = "rate:";
-
-
-
 
     public static final Long CAPTCHA_EXPIRE = 10L;
 

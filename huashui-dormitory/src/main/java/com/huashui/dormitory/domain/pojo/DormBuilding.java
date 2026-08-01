@@ -1,8 +1,10 @@
 package com.huashui.dormitory.domain.pojo;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.huashui.common.domain.pojo.BaseEntity;
 import com.huashui.common.enums.Status;
 import com.huashui.dormitory.Enum.RoomStatus;
+import com.huashui.dormitory.Enum.RoomType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -17,7 +19,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @TableName("dorm_building")
 @Schema(description = "楼栋表")
-public class DormBuilding {
+public class DormBuilding  extends BaseEntity {
 
     @TableId(type = IdType.AUTO)
     @Schema(description = "主键ID")
@@ -36,7 +38,7 @@ public class DormBuilding {
     private String buildingCode;
 
     @Schema(description = "房型（FOUR-四人间，SIX-六人间）")
-    private RoomStatus roomType;
+    private RoomType roomType;
 
     @Schema(description = "总层数")
     private Integer totalFloors;
@@ -56,13 +58,6 @@ public class DormBuilding {
     @Schema(description = "状态（0-停用，1-正常）")
     private Status status;
 
-    @TableField(fill = FieldFill.INSERT)
-    @Schema(description = "创建时间")
-    private LocalDateTime createTime;
-
-    @TableField(fill = FieldFill.INSERT_UPDATE)
-    @Schema(description = "更新时间")
-    private LocalDateTime updateTime;
 
     @TableLogic
     @Schema(description = "逻辑删除（0-未删除，1-已删除）")

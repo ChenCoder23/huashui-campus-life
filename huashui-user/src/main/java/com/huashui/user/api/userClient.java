@@ -30,11 +30,7 @@ public class userClient {
     }
 
 
-    //根据用户更新新登录时间
-    @GetMapping("/loginTime")
-    public void updateLoginTime(Long userId){
-        userService.updateLoginTime(userId);
-    }
+
 
 
     // 根据Id列表查询用户信息

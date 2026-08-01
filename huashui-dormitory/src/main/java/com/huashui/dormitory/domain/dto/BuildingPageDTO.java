@@ -5,7 +5,8 @@ import com.huashui.common.domain.query.PageQuery;
 import com.huashui.common.enums.Status;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
-import org.apache.poi.ss.formula.functions.T;
+
+
 
 /**
  * 楼栋分页查询DTO
@@ -27,7 +28,5 @@ public class BuildingPageDTO extends PageQuery {
     @Schema(description = "所在校区")
     private Long campusId;
 
-    public Page<T> toPage() {
-        return new Page<>(this.getPageNum(), this.getPageSize());
-    }
+
 }

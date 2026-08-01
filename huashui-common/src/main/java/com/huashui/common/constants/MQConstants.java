@@ -29,4 +29,10 @@ public final class MQConstants {
     // ---- 低余额告警 ----
     public static final String ALERT_QUEUE = "huashui.alert.queue";
     public static final String LOW_BALANCE_KEY = "utility.low_balance";
+
+
+    // ---- 学生信息更新 ----
+    public static final String UPDATE_LOGIN_KEY = "user.login";
+    public static final String UPDATE_LOGIN_QUEUE = "updateUserLoginTime";
+
 }

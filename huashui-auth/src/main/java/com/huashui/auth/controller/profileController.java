@@ -8,6 +8,7 @@ import com.huashui.auth.service.authService;
 import com.huashui.common.response.Result;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -72,33 +73,29 @@ public class profileController {
 
 
 
-    /*    *//**
-     * 绑定邮箱
-     *//*
+
     @PostMapping("/email")
     @Operation(summary = "绑定邮箱")
-    public Result<Void> bindEmail(@RequestBody BindEmailDTO dto) {
+    public Result<Void> bindEmail(@RequestBody @Valid BindEmailDTO dto) {
 
-        sysUserService.bindEmail(dto);
+        authService.bindEmail(dto);
 
-        return Result.success();
+        return Result.ok();
     }
 
 
-    *//**
-     * 更换邮箱
-     *//*
+
     @PutMapping("/email")
     @Operation(summary = "更换邮箱")
     public Result<Void> updateEmail(@RequestBody BindEmailDTO dto) {
 
-        sysUserService.updateEmail(dto);
+        authService.updateEmail(dto);
 
-        return Result.success();
+        return Result.ok();
 
 
 
-    }*/
+    }
 
 
 }

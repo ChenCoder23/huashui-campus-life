@@ -3,10 +3,12 @@ package com.huashui.auth.service.impl;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.captcha.CaptchaUtil;
 import cn.hutool.captcha.LineCaptcha;
+import cn.hutool.core.lang.UUID;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.digest.BCrypt;
 import com.huashui.api.client.user.UserClient;
+import com.huashui.auth.domain.dto.BindEmailDTO;
 import com.huashui.auth.domain.dto.LoginDTO;
 import com.huashui.auth.domain.dto.PasswordDTO;
 import com.huashui.auth.domain.vo.CaptchaVO;
@@ -14,6 +16,7 @@ import com.huashui.auth.domain.vo.LoginVO;
 import com.huashui.auth.service.SysUserRoleService;
 import com.huashui.auth.util.email.EmailUtil;
 import com.huashui.auth.util.email.VerifyCodeUtil;
+import com.huashui.common.constants.MQConstants;
 import com.huashui.common.domain.dto.UserSimpleInfo;
 import com.huashui.common.enums.LoginType;
 import com.huashui.auth.service.authService;
@@ -24,12 +27,20 @@ import com.huashui.common.enums.error.ErrorType;
 import com.huashui.common.exception.BusinessException;
 import com.huashui.common.response.Result;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.core.Message;
+import org.springframework.amqp.rabbit.connection.CorrelationData;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -39,9 +50,6 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @Service
 public class authServiceImpl implements authService {
-
-
-
 
     @Autowired
     private EmailService emailService;
@@ -55,16 +63,22 @@ public class authServiceImpl implements authService {
     @Autowired
     private SysUserRoleService userRoleService;
 
+    @Autowired
+    private  Executor taskExecutor;
+
+    @Autowired
+    private RabbitTemplate mqTemplate;
+
+
+
 
     //生成图片验证码
     @Override
     public Result<CaptchaVO> getCaptcha(String ip) {
-
-
+        //校验生成次数
         if (! checkIpLimit(ip)) {
             throw new BusinessException("获取验证码次数上限,请稍后再试");
         }
-
 
         //生成4位数字的验证码
         LineCaptcha captcha = CaptchaUtil.createLineCaptcha(120 , 40 , 4 , 5);
@@ -74,7 +88,6 @@ public class authServiceImpl implements authService {
 
         //把key和code放了redis便于比较
         // 存 Redis，5 分钟过期
-
         redisTemplate.opsForValue().set(
                 RedisConstants.CAPTCHA_PREFIX + key,
                 code,
@@ -95,7 +108,7 @@ public class authServiceImpl implements authService {
     public Result<LoginVO> userLogin(LoginDTO dto, String ip) {
 
         // 校验验证码
-        checkCaptcha(dto.getCaptchaCode(), dto.getCaptchaKey());
+        checkCaptcha(dto.getCaptchaCode(), RedisConstants.CAPTCHA_PREFIX+dto.getCaptchaKey());
 
         String account = dto.getAccount();
         LoginType loginType = dto.getLoginType();
@@ -104,6 +117,7 @@ public class authServiceImpl implements authService {
             throw new BusinessException("账号密码不能为空");
         }
 
+        // todo 首先查redis 查不到再查数据库
         UserSimpleInfo userInfo = userClient.getUserInfo(account, loginType);
 
         if (userInfo == null) {
@@ -122,20 +136,23 @@ public class authServiceImpl implements authService {
             throw new BusinessException("用户名或密码错误");
         }
         // 4. Sa-Token 登录
-
         StpUtil.login(userInfo.getId());
-
-
-        // todo 消息队列 跟新登录时间
-        userClient.updateLoginTime(userInfo.getId());
-
-        //清除图像验证码请求次数
-        cleanLoginCaptchaNum(ip);
-        //清除账号密码不匹配的次数
-        cleanAccountLoginLimit(account);
-
-        //获取用户角色编码
+        //获取提高性能//获取用户角色编码
         String roleCode = userRoleService.getRoleByuserId(userInfo.getId());
+
+        //  消息队列 更新登录时间
+        mqTemplate.convertAndSend(
+                MQConstants.TOPIC_EXCHANGE,
+                MQConstants.UPDATE_LOGIN_KEY,
+                userInfo.getId()
+        );
+
+        CompletableFuture.runAsync(()->{
+            //清除图像验证码请求次数
+            cleanLoginCaptchaNum(ip);
+            //清除账号密码不匹配的次数
+            cleanAccountLoginLimit(account);
+        },taskExecutor);
 
         // 6. 返回
         LoginVO loginVO = LoginVO.builder()
@@ -199,7 +216,7 @@ public class authServiceImpl implements authService {
         if (StrUtil.isNotBlank(key)) {
             //获取缓存里的验证码
             String cachedCode = redisTemplate.opsForValue()
-                    .get(RedisConstants.CAPTCHA_PREFIX + key);
+                    .get(key);
             if (StrUtil.isBlank(cachedCode)) {
                 throw new BusinessException(ErrorType.CODE_NOT_EXISTS);
             }
@@ -207,7 +224,7 @@ public class authServiceImpl implements authService {
                 throw new BusinessException(ErrorType.CODE_ERROR);
             }
             //获取后删除验证码
-            redisTemplate.delete(RedisConstants.CAPTCHA_PREFIX + key);
+            redisTemplate.delete(key);
         }
     }
 
@@ -217,7 +234,10 @@ public class authServiceImpl implements authService {
     public void updateAvatar(String avatarUrl) {
         Long userId = StpUtil.getLoginIdAsLong();
         userClient.updateAvatar(userId, avatarUrl);
+        // todo 发送MQ异步修改  回填业务id
+
     }
+
 
     //发送邮箱验证码
     @Override
@@ -229,51 +249,33 @@ public class authServiceImpl implements authService {
 
         // 1. 防刷：60秒内不能重复发送
         String limitKey = "email:limit" + email;
-        Boolean hasLimit = redisTemplate.hasKey(limitKey);
-        if (Boolean.TRUE.equals(hasLimit)) {
+        Boolean set = redisTemplate.opsForValue().setIfAbsent(limitKey, "1L", 60, TimeUnit.SECONDS);
+        if (Boolean.FALSE.equals(set)) {
             throw new BusinessException("发送太频繁，请稍后再试");
         }
         // 2. 生成验证码
         String code = VerifyCodeUtil.generateCode();
-
         // 3. 存入Redis，5分钟过期
         String codeKey = "email:code:" + email;
         redisTemplate.opsForValue().set(codeKey, code, 5*60, TimeUnit.SECONDS);
-        // 4. 设置发送频率限制标记
-        redisTemplate.opsForValue().set(limitKey, "1", 60, TimeUnit.SECONDS);
+        //  使用线程池异步发送 邮件
+            CompletableFuture.runAsync(() -> {
+                try {
+                    emailService.sendVerifyCode(email, code);
+                } catch (Exception e) {
+                    log.error("邮件发送失败,email={}", email, e);
+                    redisTemplate.delete(limitKey);
+                    redisTemplate.delete(codeKey);
+                }
+            }, taskExecutor);
 
-        // 5. 发送邮件
-        emailService.sendVerifyCode(email, code);
     }
 
-
-    /**
-     * 校验验证码（登录时调用）
-     * 校验成功后立即删除，防止重复使用
-     */
-    @Override
-    public boolean verifyCode(String email, String inputCode) {
-        String codeKey = "email:code:" + email;
-        String cachedCode = redisTemplate.opsForValue().get(codeKey);
-
-        if (cachedCode == null) {
-            throw new BusinessException("验证码已过期，请重新获取");
-        }
-
-        boolean match = cachedCode.equals(inputCode);
-        if (match) {
-            redisTemplate.delete(codeKey); // 一次性使用，验证成功立即删除
-        }
-        return match;
-    }
 
     @Override
     public String EmailLogin(String email, String code) {
         // 1. 校验验证码
-        boolean valid = verifyCode(email, code);
-        if (!valid) {
-            throw new BusinessException("验证码错误");
-        }
+        checkCaptcha(code ,RedisConstants.EMAIL_PREFIX+email);
 
         // 2. 查询用户是否存在
         UserSimpleInfo userInfo = userClient.getUserInfo(email, LoginType.EMAIL);
@@ -292,35 +294,90 @@ public class authServiceImpl implements authService {
     }
 
 
-    //判断IP地址是否达到图形化验证码的请求次数上限
-    public boolean checkIpLimit(String ip) {
+    // 绑定邮箱
+    @Override
+    public void bindEmail(BindEmailDTO dto) {
+        // 1. 校验邮箱格式
+        boolean qqEmail = EmailUtil.isQQEmail(dto.getEmail());
+        if (!qqEmail){
+            throw new BusinessException("邮箱格式不正确");
+        }
+        // 2. 获取当前用户id
+        Long userId = StpUtil.getLoginIdAsLong();
 
-        //如果无法获取Ip
-        if (StrUtil.isBlank(ip)) {
-            log.warn("获取客户端IP失败");
-            return true;
+        // 3. 查询用户
+        List<UserSimpleInfo> userInfoList = userClient.getUserInfoList(Collections.singletonList(userId));
+        UserSimpleInfo user = userInfoList.getFirst();
+        if(user == null){
+            throw new BusinessException("用户不存在");
+        }
+        // 4. 判断当前用户是否已经绑定邮箱
+        if(StrUtil.isNotBlank(user.getEmail())){
+            throw new BusinessException("当前账号已经绑定邮箱");
         }
 
+        // 5. 判断邮箱是否已经被其他用户绑定
 
+        // 7. 校验验证码
+        checkCaptcha(dto.getCode(),RedisConstants.EMAIL_PREFIX+dto.getEmail());
+
+        // 8. 保存邮箱
+
+
+    }
+
+
+    //todo
+    @Override
+    public void updateEmail(BindEmailDTO dto) {
+        //校验邮箱格式
+
+        //获取当前用户的id 用户是否存在
+
+        //判断当前用户的是否已经绑定
+
+        //判断当前邮箱是否已经被绑定
+
+        //从redis里获取验证码
+
+        // 校验验证码
+
+        //更新
+    }
+
+
+
+   //定义脚本常量
+    private  static final DefaultRedisScript<Long> CHECK_LIMIT_SCRIPT;
+
+    static {
+        CHECK_LIMIT_SCRIPT = new DefaultRedisScript<>(
+                """
+                        local count = redis.call('incr', KEYS[1])
+                        
+                        if count == 1 then
+                            redis.call('expire', KEYS[1], ARGV[1])
+                        end
+                        
+                        return count
+                        """,
+                Long.class
+        );
+    }
+
+    //判断IP地址是否达到图形化验证码的请求次数上限
+    //一分钟最多请求5次图像验证码
+    public boolean checkIpLimit(String ip) {
         //设置IP的key
        String key = RedisConstants.CAPTCHA_PREFIX_NUM + ip;
 
-        //todo 使用lua保证原子性
-        Long count =
-                redisTemplate.opsForValue()
-                        .increment(key);
-
-        //第一次访问设置过期时间
-        if (count == 1) {
-            redisTemplate.expire(
-                    key,
-                    60,
-                    TimeUnit.SECONDS
-            );
-        }
-
-
+        Long count = redisTemplate.execute(
+                CHECK_LIMIT_SCRIPT,
+                Collections.singletonList(key),
+                "60"
+        );
         return count <= 5;
+
     }
 
 
@@ -335,26 +392,16 @@ public class authServiceImpl implements authService {
     }
 
     //判断账号和密码是否达到错误次数上限
+    //每分钟可尝试五次
     public boolean checkLoginNumLimit(String account) {
 
         //设置key
         String key =RedisConstants.ACCOUNT_LOGIN_NUM + account;
-
-        //todo 使用lua保证原子性
-        Long count =
-                redisTemplate.opsForValue()
-                        .increment(key);
-
-        //第一次访问设置过期时间
-        if (count == 1) {
-            redisTemplate.expire(
-                    key,
-                    60,
-                    TimeUnit.SECONDS
-            );
-        }
-
-
+        Long count = redisTemplate.execute(
+                CHECK_LIMIT_SCRIPT,
+                Collections.singletonList(key),
+                "60"
+        );
         return count <= 5;
     }
 

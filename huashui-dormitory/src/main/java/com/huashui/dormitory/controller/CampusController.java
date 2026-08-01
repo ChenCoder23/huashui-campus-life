@@ -1,81 +1,60 @@
 package com.huashui.dormitory.controller;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.huashui.common.response.Result;
+import com.huashui.dormitory.domain.dto.CampusDTO;
+import com.huashui.dormitory.domain.pojo.SysCampus;
+import com.huashui.dormitory.service.SysCampusService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-/**
- * 校区管理
- *
- * @author
- */
+@Slf4j
 @RestController
 @RequestMapping("/dormitory/campus")
 @RequiredArgsConstructor
 @Tag(name = "校区管理")
 public class CampusController {
 
+    private final SysCampusService campusService;
 
-    /**
-     * 校区分页列表
-     *
-     * 权限：
-     * 超级管理员
-     */
     @GetMapping
-    @Operation(summary = "查询校区列表")
-    public Result<?> pageCampus() {
-        return Result.ok();
+    @Operation(summary = "校区列表（分页）")
+    public Result<Page<SysCampus>> list(
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "10") Integer size) {
+        return Result.ok(campusService.page(page, size));
     }
 
-
-    /**
-     * 新增校区
-     */
     @PostMapping
     @Operation(summary = "新增校区")
-    public Result<Void> addCampus(@RequestBody Object dto) {
+    public Result<Void> create(@Valid @RequestBody CampusDTO dto) {
+        campusService.create(dto);
         return Result.ok();
     }
 
-
-    /**
-     * 编辑校区
-     */
-    @PutMapping
+    @PutMapping("/{id}")
     @Operation(summary = "编辑校区")
-    public Result<Void> updateCampus(@RequestBody Object dto) {
+    public Result<Void> update(@PathVariable Long id, @Valid @RequestBody CampusDTO dto) {
+        campusService.update(id, dto);
         return Result.ok();
     }
 
-
-    /**
-     * 删除校区
-     *
-     * 关联楼栋时禁止删除
-     */
     @DeleteMapping("/{id}")
-    @Operation(summary = "停用校区") // 判断是否该校区的每一个楼栋全部停用
-    public Result<Void> deleteCampus(@PathVariable Long id) {
+    @Operation(summary = "删除校区")
+    public Result<Void> delete(@PathVariable Long id) {
+        campusService.deleteById(id);
         return Result.ok();
     }
 
-
-    /**
-     * 校区下拉选项
-     *
-     * 登录用户即可访问
-     */
     @GetMapping("/options")
-    @Operation(summary = "获取校区下拉选项")
-    public Result<List<?>> getCampusOptions() {
-        return Result.ok();
+    @Operation(summary = "校区下拉选项")
+    public Result<List<SysCampus>> options() {
+        return Result.ok(campusService.listEnabled());
     }
-
-
-
 }

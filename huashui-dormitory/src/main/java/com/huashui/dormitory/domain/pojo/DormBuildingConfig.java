@@ -1,6 +1,7 @@
 package com.huashui.dormitory.domain.pojo;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.huashui.common.domain.pojo.BaseEntity;
 import com.huashui.dormitory.Enum.BalconyType;
 import com.huashui.dormitory.Enum.BathType;
 import com.huashui.dormitory.Enum.HotWaterType;
@@ -18,7 +19,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @TableName("dorm_building_config")
 @Schema(description = "楼栋配置表")
-public class DormBuildingConfig {
+public class DormBuildingConfig extends BaseEntity {
 
     @TableId(type = IdType.AUTO)
     @Schema(description = "主键ID")
@@ -69,11 +70,5 @@ public class DormBuildingConfig {
     @Schema(description = "床铺尺寸")
     private String bedSize;
 
-    @TableField(fill = FieldFill.INSERT)
-    @Schema(description = "创建时间")
-    private LocalDateTime createTime;
 
-    @TableField(fill = FieldFill.INSERT_UPDATE)
-    @Schema(description = "更新时间")
-    private LocalDateTime updateTime;
 }
