@@ -24,6 +24,7 @@ public class DormHomeServiceImpl implements DormHomeService {
     @Override
     public DormHomeVO getMyDorm() {
 
+        // todo
         //获取学生的id
         Long userId = UserContext.getUserId();
         //获取学生的房间id和床位id

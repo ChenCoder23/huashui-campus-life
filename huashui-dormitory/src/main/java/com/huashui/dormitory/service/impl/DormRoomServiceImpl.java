@@ -124,6 +124,7 @@ public class DormRoomServiceImpl extends ServiceImpl<DormRoomMapper, DormRoom> i
 
     @Override
     public PageResult<DormRoom> getRoomPage(RoomPageDTO dto) {
+        // todo 使用缓存
         return null;
     }
 }
