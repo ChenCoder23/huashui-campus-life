@@ -137,8 +137,9 @@ public class authServiceImpl implements authService {
         }
         // 4. Sa-Token 登录
         StpUtil.login(userInfo.getId());
-        //获取提高性能//获取用户角色编码
+        // 获取用户角色编码，存入 Session 供 Gateway 透传
         String roleCode = userRoleService.getRoleByuserId(userInfo.getId());
+        StpUtil.getSession().set("role", roleCode);
 
         //  消息队列 更新登录时间
         mqTemplate.convertAndSend(
@@ -307,7 +308,7 @@ public class authServiceImpl implements authService {
 
         // 3. 查询用户
         List<UserSimpleInfo> userInfoList = userClient.getUserInfoList(Collections.singletonList(userId));
-        UserSimpleInfo user = userInfoList.getFirst();
+        UserSimpleInfo user = userInfoList.get(0);
         if(user == null){
             throw new BusinessException("用户不存在");
         }

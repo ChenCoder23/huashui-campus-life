@@ -4,42 +4,30 @@ server:
 spring:
   application:
     name: huashui-repair
+  main:
+    allow-bean-definition-overriding: true
+
+  config:
+    import:
+      - nacos:shared-mysql.yml?group=DEFAULT_GROUP&refresh-enabled=true
+      - nacos:shared-springdoc.yml?group=DEFAULT_GROUP&refresh-enabled=true
+      - nacos:shared-redis.yml?group=DEFAULT_GROUP&refresh-enabled=true
+
+
+
   cloud:
     nacos:
+      server-addr: 127.0.0.1:18848
+      username: nacos
+      password: Chc23pray
+
       discovery:
-        server-addr: 127.0.0.1:18848
+        fail-fast: false
+
       config:
-        server-addr: 127.0.0.1:18848
-        file-extension: yml
-  datasource:
-    url: jdbc:mysql://127.0.0.1:3308/huashui_repair?useUnicode=true&characterEncoding=utf8mb4&serverTimezone=Asia/Shanghai
-    username: huashuiNB666
-    password: huashuiNB666pw
-    driver-class-name: com.mysql.cj.jdbc.Driver
-  data:
-    redis:
-      host: 127.0.0.1
-      port: 6379
-  rabbitmq:
-    host: 127.0.0.1
-    port: 5672
-    username: huashuiNB666
-    password: huashuiNB666pw
+        refresh-enabled: true
 
-mybatis-plus:
-  mapper-locations: classpath*:/mapper/**/*.xml
-  global-config:
-    db-config:
-      logic-delete-field: isDeleted
-      logic-delete-value: 1
-      logic-not-delete-value: 0
 
-springdoc:
-  api-docs:
-    path: /v3/api-docs
-  swagger-ui:
-    path: /swagger-ui.html
-knife4j:
-  enable: true
-  setting:
-    language: zh_cn
+hs:
+  jdbc:
+    db: huashui_repair

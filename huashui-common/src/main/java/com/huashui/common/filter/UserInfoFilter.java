@@ -4,7 +4,6 @@ import com.huashui.common.utils.UserContext;
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -13,7 +12,6 @@ import java.io.IOException;
 @Component
 public class UserInfoFilter implements Filter {
 
-
     @Override
     public void doFilter(
             ServletRequest servletRequest,
@@ -21,27 +19,22 @@ public class UserInfoFilter implements Filter {
             FilterChain chain)
             throws IOException, ServletException {
 
-
         HttpServletRequest request = (HttpServletRequest) servletRequest;
 
-
         String userId = request.getHeader("X-User-Id");
+        String roles = request.getHeader("X-User-Roles");
 
-
-        if(userId != null){
-            log.info("++++++++common模块拦截用户Id:{}+++++++++++",userId);
+        if (userId != null) {
             UserContext.setUserId(Long.valueOf(userId));
         }
-
+        if (roles != null) {
+            UserContext.setRoles(roles);
+        }
 
         try {
-
             chain.doFilter(request, servletResponse);
-
         } finally {
-
             UserContext.remove();
-
         }
     }
 }
