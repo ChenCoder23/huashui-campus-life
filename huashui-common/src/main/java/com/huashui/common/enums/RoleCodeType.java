@@ -1,11 +1,7 @@
 package com.huashui.common.enums;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
 
-@Getter
-@AllArgsConstructor
 @Schema(description = "角色编码")
 public enum RoleCodeType {
 
@@ -29,4 +25,17 @@ public enum RoleCodeType {
 
     @Schema(description = "描述")
     private final String desc;
+
+    RoleCodeType(String code, String desc) {
+        this.code = code;
+        this.desc = desc;
+    }
+
+    public String getCode() {
+        return code;
+    }
+
+    public String getDesc() {
+        return desc;
+    }
 }

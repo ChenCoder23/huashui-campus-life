@@ -2,6 +2,7 @@ package com.huashui.auth.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollectionUtil;
+import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.huashui.auth.domain.dto.MenuDTO;
 import com.huashui.auth.domain.pojo.Menu;
@@ -15,7 +16,10 @@ import com.huashui.auth.util.menu.MenuUtil;
 import com.huashui.common.exception.BusinessException;
 import com.huashui.common.utils.UserContext;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.ibatis.logging.Log;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -27,19 +31,29 @@ import java.util.List;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements MenuService {
 
     @Autowired
     private SysRoleMenuService roleMenuService;
     @Autowired
     private SysUserRoleService userRoleService;
+    @Autowired
+    private RedisTemplate<String,String> redisTemplate;
 
 
     // 获取全量菜单树
     @Override
     public List<Menu> getMenuTree() {
+        Object menus = redisTemplate.opsForValue().get("auth:menus:all");
+        if (menus != null){
+            return JSONUtil.toList(menus.toString(), Menu.class);
+        }
         List<Menu> menuList = list();
-        return MenuUtil.buildTree(menuList);
+        List<Menu> tree = MenuUtil.buildTree(menuList);
+        String jsonStr = JSONUtil.toJsonStr(tree);
+        redisTemplate.opsForValue().set("auth:menus:all",jsonStr);
+        return tree;
     }
 
     @Override
@@ -69,6 +83,8 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements Me
         }
         List<Long> menuIds = sysRoleMenus.stream().map(SysRoleMenu::getMenuId).toList();
         List<Menu> menus = listByIds(menuIds); // todo 状态为禁用的不再返回
+
+
         return MenuUtil.buildTree(menus);
 
     }
@@ -83,14 +99,13 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements Me
     public List<Menu> getMenuByUserId() {
         // 获取UserID
         Long userId = UserContext.getUserId();
+
         //查询用户对应的role
         SysUserRole role = userRoleService.lambdaQuery().eq(SysUserRole::getUserId, userId).one();
-
         if (role == null){
             throw new BusinessException("还未未该user分配角色,请联系管理员");
         }
 
-        List<Menu> menus = getMenuByRoleId(role.getRoleId());
-         return MenuUtil.buildTree(menus);
+        return getMenuByRoleId(role.getRoleId());
     }
 }

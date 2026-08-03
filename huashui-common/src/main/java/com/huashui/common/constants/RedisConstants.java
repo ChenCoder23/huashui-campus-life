@@ -15,7 +15,7 @@ public final class RedisConstants {
 
 
     /** qq邮箱验证码验证码 */
-    public static final String EMAIL_PREFIX = "email:code";
+    public static final String EMAIL_PREFIX = "email:code:";
 
     /** 验证码请求次数 */
     public static final String CAPTCHA_PREFIX_NUM = "captcha:num:";

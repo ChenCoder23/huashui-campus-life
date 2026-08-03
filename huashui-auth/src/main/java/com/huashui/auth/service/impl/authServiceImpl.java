@@ -3,7 +3,6 @@ package com.huashui.auth.service.impl;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.captcha.CaptchaUtil;
 import cn.hutool.captcha.LineCaptcha;
-import cn.hutool.core.lang.UUID;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.digest.BCrypt;
@@ -14,6 +13,7 @@ import com.huashui.auth.domain.dto.PasswordDTO;
 import com.huashui.auth.domain.vo.CaptchaVO;
 import com.huashui.auth.domain.vo.LoginVO;
 import com.huashui.auth.service.SysUserRoleService;
+import com.huashui.auth.util.MQ.mqUtil;
 import com.huashui.auth.util.email.EmailUtil;
 import com.huashui.auth.util.email.VerifyCodeUtil;
 import com.huashui.common.constants.MQConstants;
@@ -26,9 +26,8 @@ import com.huashui.common.enums.Status;
 import com.huashui.common.enums.error.ErrorType;
 import com.huashui.common.exception.BusinessException;
 import com.huashui.common.response.Result;
+import com.huashui.common.utils.UserContext;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.core.Message;
-import org.springframework.amqp.rabbit.connection.CorrelationData;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -57,6 +56,7 @@ public class authServiceImpl implements authService {
     @Autowired
     private  StringRedisTemplate redisTemplate;
 
+
     @Autowired
     private UserClient userClient;
 
@@ -67,7 +67,7 @@ public class authServiceImpl implements authService {
     private  Executor taskExecutor;
 
     @Autowired
-    private RabbitTemplate mqTemplate;
+    private mqUtil mqUtil;
 
 
 
@@ -111,13 +111,13 @@ public class authServiceImpl implements authService {
         checkCaptcha(dto.getCaptchaCode(), RedisConstants.CAPTCHA_PREFIX+dto.getCaptchaKey());
 
         String account = dto.getAccount();
-        LoginType loginType = dto.getLoginType();
+        LoginType loginType = dto.getLoginType() != null ? dto.getLoginType() : LoginType.ACCOUNT;
         //账号不能为null,密码判空
         if (StrUtil.isBlank(account) || StrUtil.isBlank(dto.getPassword())) {
             throw new BusinessException("账号密码不能为空");
         }
 
-        // todo 首先查redis 查不到再查数据库
+
         UserSimpleInfo userInfo = userClient.getUserInfo(account, loginType);
 
         if (userInfo == null) {
@@ -141,12 +141,10 @@ public class authServiceImpl implements authService {
         String roleCode = userRoleService.getRoleByuserId(userInfo.getId());
         StpUtil.getSession().set("role", roleCode);
 
+
         //  消息队列 更新登录时间
-        mqTemplate.convertAndSend(
-                MQConstants.TOPIC_EXCHANGE,
-                MQConstants.UPDATE_LOGIN_KEY,
-                userInfo.getId()
-        );
+        userInfo.setLastLoginTime(LocalDateTime.now());
+        mqUtil.updateUserInfo(userInfo);
 
         CompletableFuture.runAsync(()->{
             //清除图像验证码请求次数
@@ -180,7 +178,7 @@ public class authServiceImpl implements authService {
     @Override
     public void updatePassword(PasswordDTO dto) {
         //获取用户id
-        Long userId = StpUtil.getLoginIdAsLong();
+        Long userId = UserContext.getUserId();
         //判断当前用户身份
         String roleCode = userRoleService.getRoleByuserId(userId);
         //管理员修改密码
@@ -194,7 +192,7 @@ public class authServiceImpl implements authService {
             if (!Objects.equals(userInfo.getId(), userId)){
                 throw new BusinessException("你无法修改他人的密码");
             }
-            // todo 校验旧密码
+
             updateUserPassword(userId,dto.getNewPassword());
 
         }
@@ -204,7 +202,11 @@ public class authServiceImpl implements authService {
     //更新用户密码
     private void updateUserPassword(Long id,String password){
         password = BCrypt.hashpw(password);
-        userClient.updatePassword(id,password);
+        //发送mq更新user密码
+        UserSimpleInfo userSimpleInfo = new UserSimpleInfo();
+        userSimpleInfo.setId(id);
+        userSimpleInfo.setPassword(password);
+        mqUtil.updateUserInfo(userSimpleInfo);
     }
 
 
@@ -233,10 +235,12 @@ public class authServiceImpl implements authService {
     // 修改头像
     @Override
     public void updateAvatar(String avatarUrl) {
-        Long userId = StpUtil.getLoginIdAsLong();
-        userClient.updateAvatar(userId, avatarUrl);
-        // todo 发送MQ异步修改  回填业务id
-
+        Long userId = UserContext.getUserId();
+        //更新用户头像
+        UserSimpleInfo userSimpleInfo = new UserSimpleInfo();
+        userSimpleInfo.setId(userId);
+        userSimpleInfo.setAvatar(avatarUrl);
+        mqUtil.updateUserInfo(userSimpleInfo);
     }
 
 
@@ -249,7 +253,7 @@ public class authServiceImpl implements authService {
         }
 
         // 1. 防刷：60秒内不能重复发送
-        String limitKey = "email:limit" + email;
+        String limitKey = "email:limit:" + email;
         Boolean set = redisTemplate.opsForValue().setIfAbsent(limitKey, "1L", 60, TimeUnit.SECONDS);
         if (Boolean.FALSE.equals(set)) {
             throw new BusinessException("发送太频繁，请稍后再试");
@@ -274,7 +278,7 @@ public class authServiceImpl implements authService {
 
 
     @Override
-    public String EmailLogin(String email, String code) {
+    public LoginVO EmailLogin(String email, String code) {
         // 1. 校验验证码
         checkCaptcha(code ,RedisConstants.EMAIL_PREFIX+email);
 
@@ -288,19 +292,29 @@ public class authServiceImpl implements authService {
         Long userId = userInfo.getId();
         // 3. Sa-Token 登录签发token
         StpUtil.login(userId);
-
-        // todo 消息队列 跟新登录时间
-        userClient.updateLoginTime(userId);
-        return StpUtil.getTokenValue();
+        String roleCode = userRoleService.getRoleByuserId(userInfo.getId());
+        //更新最后登录时间
+        userInfo.setLastLoginTime(LocalDateTime.now());
+        mqUtil.updateUserInfo(userInfo);
+        // 6. 返回
+        return LoginVO.builder()
+                .token(StpUtil.getTokenValue())
+                .userId(userInfo.getId())
+                .username(userInfo.getUsername())
+                .realName(userInfo.getRealName())
+                .userType(roleCode)
+                .avatar(userInfo.getAvatar())
+                .build();
     }
 
 
     // 绑定邮箱
+
     @Override
     public void bindEmail(BindEmailDTO dto) {
         // 1. 校验邮箱格式
-        boolean qqEmail = EmailUtil.isQQEmail(dto.getEmail());
-        if (!qqEmail){
+        boolean IsEmail = EmailUtil.isQQEmail(dto.getEmail());
+        if (!IsEmail){
             throw new BusinessException("邮箱格式不正确");
         }
         // 2. 获取当前用户id
@@ -317,14 +331,16 @@ public class authServiceImpl implements authService {
             throw new BusinessException("当前账号已经绑定邮箱");
         }
 
-        // 5. 判断邮箱是否已经被其他用户绑定
+        // 5.  todo 判断邮箱是否已经被其他用户绑定
 
         // 7. 校验验证码
         checkCaptcha(dto.getCode(),RedisConstants.EMAIL_PREFIX+dto.getEmail());
 
         // 8. 保存邮箱
-
-
+        UserSimpleInfo userSimpleInfo = new UserSimpleInfo();
+        userSimpleInfo.setId(userId);
+        userSimpleInfo.setEmail(dto.getEmail());
+        mqUtil.updateUserInfo(userSimpleInfo);
     }
 
 
@@ -384,11 +400,8 @@ public class authServiceImpl implements authService {
 
     // 清除指定IP地址的图像验证码的请求次数
     public void cleanLoginCaptchaNum(String ip){
-
         //设置IP的key
         String key = RedisConstants.CAPTCHA_PREFIX_NUM + ip;
-
-
         redisTemplate.delete(key);
     }
 

@@ -32,6 +32,7 @@ public interface UserClient {
     public List<UserSimpleInfo> getUserInfoList(@RequestParam List<Long> userIds) ;
 
 
+    //根据id更新用户密码
     @GetMapping("user/inner/password")
     void updatePassword(@RequestParam Long id,@RequestParam String password);
 }

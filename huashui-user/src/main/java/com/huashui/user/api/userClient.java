@@ -24,8 +24,8 @@ public class userClient {
     // 根据手机号/邮箱/账号(学号/工号)查询用户信息
     @GetMapping("/userInfo")
     public UserSimpleInfo getUserInfo(
-            @RequestParam String account ,
-            @RequestParam LoginType type){
+            @RequestParam("account") String account ,
+            @RequestParam("type") LoginType type){
         return userService.getUserInfoByAccount(account, type);
     }
 

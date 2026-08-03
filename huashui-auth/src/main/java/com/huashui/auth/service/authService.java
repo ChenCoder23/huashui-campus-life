@@ -33,7 +33,7 @@ public interface authService {
 
 
 
-    String EmailLogin(@Email String email, @NotBlank String code);
+    LoginVO EmailLogin(@Email String email, @NotBlank String code);
 
     void bindEmail(@Valid BindEmailDTO dto);
 

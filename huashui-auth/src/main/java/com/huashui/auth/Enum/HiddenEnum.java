@@ -1,6 +1,7 @@
 package com.huashui.auth.Enum;
 
 import com.baomidou.mybatisplus.annotation.EnumValue;
+import com.fasterxml.jackson.annotation.JsonValue;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -18,6 +19,7 @@ public enum HiddenEnum {
 
     @Schema(description = "值")
     @EnumValue
+    @JsonValue
     private final Integer value;
 
     @Schema(description = "描述")

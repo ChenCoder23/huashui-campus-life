@@ -3,12 +3,7 @@ package com.huashui.common.enums;
 
 import com.baomidou.mybatisplus.annotation.EnumValue;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
 
-
-@Getter
-@AllArgsConstructor
 @Schema(description = "状态")
 public enum Status {
 
@@ -24,4 +19,17 @@ public enum Status {
 
     @Schema(description = "描述")
     private final String desc;
+
+    Status(Integer value, String desc) {
+        this.value = value;
+        this.desc = desc;
+    }
+
+    public Integer getValue() {
+        return value;
+    }
+
+    public String getDesc() {
+        return desc;
+    }
 }

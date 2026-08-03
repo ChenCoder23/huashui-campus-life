@@ -57,5 +57,9 @@ public class UserSimpleInfo {
     @Schema(description = "角色编码")
     private RoleCodeType roleCode;
 
+    @Schema(description = "最后登录时间")
+    private LocalDateTime lastLoginTime;
+
+
 
 }

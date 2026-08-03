@@ -77,9 +77,7 @@ public class profileController {
     @PostMapping("/email")
     @Operation(summary = "绑定邮箱")
     public Result<Void> bindEmail(@RequestBody @Valid BindEmailDTO dto) {
-
         authService.bindEmail(dto);
-
         return Result.ok();
     }
 

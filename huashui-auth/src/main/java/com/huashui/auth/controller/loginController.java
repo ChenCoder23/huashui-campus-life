@@ -26,6 +26,12 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class loginController {
 
+
+    /*
+    * 可以用户的账号密码登录,
+    * 绑定邮箱后可以邮箱加验证码登录
+    */
+
     @Autowired
     private authService authService;
 
@@ -39,7 +45,7 @@ public class loginController {
 
     @Operation(summary = "账密登录")
     @PostMapping("/login")
-    public Result<LoginVO> userLogin(HttpServletRequest request,LoginDTO dto) {
+    public Result<LoginVO> userLogin(HttpServletRequest request, @RequestBody LoginDTO dto) {
         return authService.userLogin(dto , request.getRemoteAddr());
     }
 
@@ -67,7 +73,7 @@ public class loginController {
 
      @Operation(summary = "邮箱验证码登录")
     @PostMapping("/email/login")
-    public Result<String> login(@RequestParam @Email String email, @RequestParam @NotBlank String code) {
+    public Result<LoginVO> login(@RequestParam @Email String email, @RequestParam @NotBlank String code) {
 
         return Result.ok(authService.EmailLogin(email,code));
     }

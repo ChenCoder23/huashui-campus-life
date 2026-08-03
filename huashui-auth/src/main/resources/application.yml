@@ -35,3 +35,8 @@ hs:
   jdbc:
     db: huashui_rbac
 
+#设置日志级别
+logging:
+  level:
+    com.huashui.auth.mapper: debug
+

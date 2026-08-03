@@ -1,6 +1,7 @@
 package com.huashui.auth.util.menu;
 
 import com.huashui.auth.domain.pojo.Menu;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -10,6 +11,7 @@ import java.util.Map;
 /**
  * @author
  */
+@Slf4j
 public class MenuUtil {
 
     /**
@@ -35,14 +37,19 @@ public class MenuUtil {
             // 顶级菜单
             if (menu.getParentId() == 0L) {
                 roots.add(menu);
-                continue;
-            }
-            Menu parent = menuMap.get(menu.getParentId());
 
-            if (parent != null) {
-                parent.getChildren().add(menu);
+            }else {
+                Menu parent = menuMap.get(menu.getParentId());
+
+                if (parent != null) {
+                    parent.getChildren().add(menu);
+                }
+
             }
+
+
         }
+
 
         return roots;
     }
