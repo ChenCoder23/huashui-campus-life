@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="com.huashui.auth.mapper.SysUserMapper">
+
+
+    <select id="selectCleanerByRole" resultType="com.huashui.api.domain.vo.CleanerSimpleVO"
+            parameterType="java.lang.String">
+        SELECT
+            u.id,
+            u.real_name
+        FROM sys_user u
+
+                 LEFT JOIN sys_user_role ur
+                           ON u.id = ur.user_id
+
+                 LEFT JOIN sys_role r
+                           ON ur.role_id = r.id
+
+        WHERE r.code = #{role}
+
+    </select>
+</mapper>

@@ -11,6 +11,8 @@ import com.huashui.dormitory.domain.vo.BuildingDetailVO;
 import com.huashui.dormitory.domain.vo.BuildingPageVO;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public interface DormBuildingService extends IService<DormBuilding> {
 
@@ -29,4 +31,6 @@ public interface DormBuildingService extends IService<DormBuilding> {
     List<DormBuilding> listEnabledByCampus(Long campusId);
 
     PageResult<BuildingPageVO> getBuildingsPage(BuildingPageDTO dto);
+
+    Map<Long, String> batchName(Set<Long> ids);
 }

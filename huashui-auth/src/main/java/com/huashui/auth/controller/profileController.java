@@ -52,7 +52,6 @@ public class profileController {
     @PutMapping("/password")
     @Operation(summary = "修改密码")
     public Result<Void> updatePassword(@RequestBody PasswordDTO dto) {
-        // todo 管理员修改不需要验证码但是学生和工作人员需要填写验证码
         authService.updatePassword(dto);
         return Result.ok();
     }
@@ -72,8 +71,6 @@ public class profileController {
 
 
 
-
-
     @PostMapping("/email")
     @Operation(summary = "绑定邮箱")
     public Result<Void> bindEmail(@RequestBody @Valid BindEmailDTO dto) {
@@ -82,13 +79,10 @@ public class profileController {
     }
 
 
-
     @PutMapping("/email")
     @Operation(summary = "更换邮箱")
     public Result<Void> updateEmail(@RequestBody BindEmailDTO dto) {
-
         authService.updateEmail(dto);
-
         return Result.ok();
 
 

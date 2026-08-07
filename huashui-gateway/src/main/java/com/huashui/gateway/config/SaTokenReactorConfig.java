@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Configuration;
 /**
  * Sa-Token Reactor 配置 (Spring Cloud Gateway / WebFlux)
  *
- * <p>⚠️ 关键：WebFlux 模式下不会自动注册 SaReactorFilter，
+ * <p>WebFlux 模式下不会自动注册 SaReactorFilter，
  * 必须显式注册此 Bean，否则所有鉴权请求返回 401。</p>
  */
 @Configuration

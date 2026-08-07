@@ -15,6 +15,8 @@ public class PageResult<T> implements Serializable {
     private long page;
     private long size;
     private List<T> records;
+    private int code;
+
 
     public static <T> PageResult<T> of(long total, long page, long size, List<T> records) {
         PageResult<T> r = new PageResult<>();
@@ -22,6 +24,7 @@ public class PageResult<T> implements Serializable {
         r.page = page;
         r.size = size;
         r.records = records;
+        r.code = 200;
         return r;
     }
 }

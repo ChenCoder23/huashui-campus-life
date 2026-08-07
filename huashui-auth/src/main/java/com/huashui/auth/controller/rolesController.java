@@ -1,5 +1,8 @@
 package com.huashui.auth.controller;
 
+import com.huashui.auth.domain.dto.RoleUpdateDTO;
+import com.huashui.auth.domain.vo.RoleVO;
+import com.huashui.auth.service.SysRoleService;
 import com.huashui.common.response.Result;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -16,20 +19,33 @@ import java.util.List;
 public class rolesController {
 
 
+
+
+    private final SysRoleService roleService;
+
+
+
+    /**
+     * 查询用户角色
+     */
     @GetMapping("/users/{id}/roles")
     @Operation(summary = "查询用户角色")
-    public Result<List<?>> getUserRoles(@PathVariable Long id) {
+    public Result<RoleVO> getUserRoles(@PathVariable Long id) {
 
-        return Result.ok();
+        return Result.ok(roleService.getUserRole(id));
     }
 
     /**
      * 设置用户拥有的角色
+     *
+     * 一个用户只能拥有一个角色
      */
     @PutMapping("/users/{id}/roles")
     @Operation(summary = "设置用户角色")
-    public Result<Void> setUserRoles(@PathVariable Long id, @RequestBody List<Long> roleIds) {
-
+    public Result<Void> setUserRoles(
+            @PathVariable Long id,
+            @RequestBody Long roleId) {
+        roleService.setUserRole(id, roleId);
         return Result.ok();
     }
 
@@ -39,42 +55,25 @@ public class rolesController {
      */
     @GetMapping("/roles")
     @Operation(summary = "查询角色列表")
-    public Result<List<?>> getRoles() {
+    public Result<List<RoleVO>> getRoles() {
 
-        return Result.ok();
+        return Result.ok(
+                roleService.listRoles()
+        );
     }
 
 
     /**
-     * 新增角色
-     */
-    @PostMapping("/roles")
-    @Operation(summary = "新增角色")
-    public Result<Void> addRole(@RequestBody Object dto) {
-
-        return Result.ok();
-    }
-
-
-    /**
-     * 修改角色
+     * 修改角色信息
+     *
+     * 修改角色描述、状态等
      */
     @PutMapping("/roles/{id}")
-    @Operation(summary = "修改角色")  // 修改角色描述和状态
-    public Result<Void> updateRole(@PathVariable Long id, @RequestBody Object dto) {
-
-        return Result.ok();
-    }
-
-
-    /**
-     * 删除角色
-     */
-    @DeleteMapping("/roles/{id}")
-    @Operation(summary = "删除角色")
-    public Result<Void> deleteRole(@PathVariable Long id) {
-
-        // todo 角色还有用户无法删除
+    @Operation(summary = "修改角色")
+    public Result<Void> updateRole(
+            @PathVariable Long id,
+            @RequestBody RoleUpdateDTO dto) {
+        roleService.updateRole(id,dto);
         return Result.ok();
     }
 

@@ -6,6 +6,8 @@ import com.huashui.dormitory.domain.dto.CampusDTO;
 import com.huashui.dormitory.domain.pojo.SysCampus;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public interface SysCampusService extends IService<SysCampus> {
 
@@ -18,4 +20,6 @@ public interface SysCampusService extends IService<SysCampus> {
     void deleteById(Long id);
 
     List<SysCampus> listEnabled();
+
+    Map<Long, String> batchName(Set<Long> ids);
 }

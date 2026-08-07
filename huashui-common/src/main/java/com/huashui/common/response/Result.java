@@ -3,6 +3,7 @@ package com.huashui.common.response;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.util.List;
 
 /**
  * 统一响应体

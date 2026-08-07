@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="com.huashui.task.mapper.TaskTemplateMapper">
+
+
+    <select id="selectTemplatePage"
+            resultType="com.huashui.task.domain.vo.template.CleanTaskTemplateVO">
+
+
+        SELECT
+        MIN(id) AS id,
+
+        name,
+
+        campus_id,
+
+        building_id,
+
+        COUNT(worker_id) AS worker_count,
+
+        MAX(enabled) AS enabled,
+
+        MAX(create_time) AS create_time,
+
+        MAX(update_time) AS update_time
+
+
+        FROM task_template
+
+
+        <where>
+            <if test="dto.campusId != null">
+                AND campus_id = #{dto.campusId}
+            </if>
+
+
+            <if test="dto.buildingId != null">
+                AND building_id = #{dto.buildingId}
+            </if>
+
+
+            <if test="dto.enabled != null">
+                AND enabled = #{dto.enabled}
+            </if>
+
+
+            <if test="dto.name != null and dto.name != ''">
+                AND name LIKE CONCAT('%',#{dto.name},'%')
+            </if>
+
+
+        </where>
+
+
+        GROUP BY
+        name,
+        campus_id,
+        building_id
+
+
+    </select>
+</mapper>

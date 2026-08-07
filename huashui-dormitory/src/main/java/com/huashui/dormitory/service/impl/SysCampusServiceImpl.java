@@ -18,6 +18,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -50,7 +53,6 @@ public class SysCampusServiceImpl
         SysCampus campus = getById(id);
         if (campus == null) throw new BusinessException("校区不存在");
         BeanUtil.copyProperties(dto, campus);
-        log.info("++++++++++++++");
         updateById(campus);
     }
 
@@ -69,5 +71,21 @@ public class SysCampusServiceImpl
     @Override
     public List<SysCampus> listEnabled() {
         return lambdaQuery().eq(SysCampus::getStatus, Status.ENABLED).orderByAsc(SysCampus::getSortOrder).list();
+    }
+
+
+    //根据id获取校区的名称
+    @Override
+    public Map<Long, String> batchName(Set<Long> ids) {
+        return lambdaQuery()
+                .in(SysCampus::getId, ids)
+                .list()
+                .stream()
+                .collect(
+                        Collectors.toMap(
+                                SysCampus::getId,
+                                SysCampus::getCampusName
+                        )
+                );
     }
 }

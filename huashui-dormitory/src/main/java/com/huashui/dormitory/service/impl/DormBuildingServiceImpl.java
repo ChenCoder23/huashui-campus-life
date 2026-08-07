@@ -29,6 +29,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -142,6 +145,20 @@ public class DormBuildingServiceImpl extends ServiceImpl<DormBuildingMapper, Dor
         fillRoomInfo(voPage.getRecords());
 
         return PageResult.of(voPage.getTotal(),voPage.getPages(),voPage.getSize(),voPage.getRecords());
+    }
+
+    @Override
+    public Map<Long, String> batchName(Set<Long> ids) {
+        return lambdaQuery()
+                .in(DormBuilding::getId, ids)
+                .list()
+                .stream()
+                .collect(
+                        Collectors.toMap(
+                                DormBuilding::getId,
+                                DormBuilding::getBuildingName
+                        )
+                );
     }
 
     //todo

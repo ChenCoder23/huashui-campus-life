@@ -16,9 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
-public class SysConfigServiceImpl
-        extends ServiceImpl<SysConfigMapper, SysConfig>
-        implements SysConfigService {
+public class SysConfigServiceImpl extends ServiceImpl<SysConfigMapper, SysConfig> implements SysConfigService {
 
     @Override
     public Page<SysConfig> page(Integer page, Integer size, String configGroup) {
@@ -46,5 +44,19 @@ public class SysConfigServiceImpl
         if (entity == null) throw new BusinessException("系统配置不存在");
         BeanUtil.copyProperties(dto, entity, "id");
         updateById(entity);
+    }
+
+    @Override
+    public String getValueByKey(String key) {
+        SysConfig config = lambdaQuery()
+                .eq(SysConfig::getConfigKey, key)
+                .one();
+
+        if(config == null){
+            throw new RuntimeException(
+                    "系统配置不存在:" + key
+            );
+        }
+        return config.getConfigValue();
     }
 }

@@ -1,8 +1,10 @@
 package com.huashui.api.fallback;
 
 import com.huashui.api.client.user.UserClient;
+import com.huashui.api.domain.vo.CleanerSimpleVO;
 import com.huashui.common.domain.dto.UserSimpleInfo;
 import com.huashui.common.enums.LoginType;
+import com.huashui.common.response.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
@@ -27,15 +29,6 @@ public class UserClientFallbackFactory
                 return null;
             }
 
-            @Override
-            public void updateLoginTime(Long id) {
-                log.info("更新登录时间异常");
-            }
-
-            @Override
-            public void updateAvatar(Long userId, String avatarUrl) {
-
-            }
 
             @Override
             public List<UserSimpleInfo> getUserInfoList(List<Long> userIds) {
@@ -43,9 +36,11 @@ public class UserClientFallbackFactory
             }
 
             @Override
-            public void updatePassword(Long id, String password) {
-
+            public Result<List<CleanerSimpleVO>> listByRole(String role) {
+                return null;
             }
+
+
         };
 
     }

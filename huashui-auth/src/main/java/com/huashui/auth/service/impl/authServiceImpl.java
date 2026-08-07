@@ -6,17 +6,17 @@ import cn.hutool.captcha.LineCaptcha;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.digest.BCrypt;
-import com.huashui.api.client.user.UserClient;
 import com.huashui.auth.domain.dto.BindEmailDTO;
 import com.huashui.auth.domain.dto.LoginDTO;
 import com.huashui.auth.domain.dto.PasswordDTO;
+import com.huashui.auth.domain.pojo.SysUser;
 import com.huashui.auth.domain.vo.CaptchaVO;
 import com.huashui.auth.domain.vo.LoginVO;
 import com.huashui.auth.service.SysUserRoleService;
+import com.huashui.auth.service.SysUserService;
 import com.huashui.auth.util.MQ.mqUtil;
 import com.huashui.auth.util.email.EmailUtil;
 import com.huashui.auth.util.email.VerifyCodeUtil;
-import com.huashui.common.constants.MQConstants;
 import com.huashui.common.domain.dto.UserSimpleInfo;
 import com.huashui.common.enums.LoginType;
 import com.huashui.auth.service.authService;
@@ -28,7 +28,6 @@ import com.huashui.common.exception.BusinessException;
 import com.huashui.common.response.Result;
 import com.huashui.common.utils.UserContext;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
@@ -36,7 +35,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
-import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -56,10 +54,6 @@ public class authServiceImpl implements authService {
     @Autowired
     private  StringRedisTemplate redisTemplate;
 
-
-    @Autowired
-    private UserClient userClient;
-
     @Autowired
     private SysUserRoleService userRoleService;
 
@@ -68,6 +62,9 @@ public class authServiceImpl implements authService {
 
     @Autowired
     private mqUtil mqUtil;
+
+    @Autowired
+    private SysUserService userService;
 
 
 
@@ -79,13 +76,11 @@ public class authServiceImpl implements authService {
         if (! checkIpLimit(ip)) {
             throw new BusinessException("获取验证码次数上限,请稍后再试");
         }
-
         //生成4位数字的验证码
         LineCaptcha captcha = CaptchaUtil.createLineCaptcha(120 , 40 , 4 , 5);
         String code = captcha.getCode();
         log.info("{},获取验证码:{}", LocalDateTime.now(),code);
         String key = IdUtil.fastSimpleUUID();
-
         //把key和code放了redis便于比较
         // 存 Redis，5 分钟过期
         redisTemplate.opsForValue().set(
@@ -94,21 +89,17 @@ public class authServiceImpl implements authService {
                 RedisConstants.CAPTCHA_EXPIRE,  //设置过期时间了  10 分钟
                 TimeUnit.MINUTES
         );
-
          // base64 图片（Hutool getImageBase64Data 已含 data:image/png;base64, 前缀）
          String imageBase64 = captcha.getImageBase64Data();
-
         return Result.ok(new CaptchaVO(key,imageBase64));
-
     }
-
 
     //用户的账密登录
     @Override
     public Result<LoginVO> userLogin(LoginDTO dto, String ip) {
 
         // 校验验证码
-        checkCaptcha(dto.getCaptchaCode(), RedisConstants.CAPTCHA_PREFIX+dto.getCaptchaKey());
+        checkRedisCode(dto.getCaptchaCode(), RedisConstants.CAPTCHA_PREFIX+dto.getCaptchaKey());
 
         String account = dto.getAccount();
         LoginType loginType = dto.getLoginType() != null ? dto.getLoginType() : LoginType.ACCOUNT;
@@ -117,13 +108,12 @@ public class authServiceImpl implements authService {
             throw new BusinessException("账号密码不能为空");
         }
 
-
-        UserSimpleInfo userInfo = userClient.getUserInfo(account, loginType);
+        UserSimpleInfo userInfo = userService.getUserInfoByAccount(account, loginType);
 
         if (userInfo == null) {
             throw new BusinessException(ErrorType.USER_NOT_FOUND);
         }
-
+        //用户是否被冻结
         if (Status.DISABLED == userInfo.getStatus() ) {
             throw new BusinessException("账号已被冻结，请联系管理员");
         }
@@ -142,17 +132,17 @@ public class authServiceImpl implements authService {
         StpUtil.getSession().set("role", roleCode);
 
 
-        //  消息队列 更新登录时间
         userInfo.setLastLoginTime(LocalDateTime.now());
-        mqUtil.updateUserInfo(userInfo);
 
+
+        //异步清除并更新登录时间
         CompletableFuture.runAsync(()->{
+            userService.updateById(SysUser.builder().id(userInfo.getId()).lastLoginTime(LocalDateTime.now()).build());
             //清除图像验证码请求次数
             cleanLoginCaptchaNum(ip);
             //清除账号密码不匹配的次数
             cleanAccountLoginLimit(account);
         },taskExecutor);
-
         // 6. 返回
         LoginVO loginVO = LoginVO.builder()
                 .token(StpUtil.getTokenValue())
@@ -177,41 +167,85 @@ public class authServiceImpl implements authService {
     // 修改密码
     @Override
     public void updatePassword(PasswordDTO dto) {
-        //获取用户id
+
+        //获取userid
         Long userId = UserContext.getUserId();
-        //判断当前用户身份
-        String roleCode = userRoleService.getRoleByuserId(userId);
-        //管理员修改密码
-        if (Objects.equals(roleCode, RoleCodeType.SUPER_ADMIN.getCode())
-                || Objects.equals(roleCode, RoleCodeType.DORM_MANAGER.getCode())){
-            updateUserPassword(userId,dto.getNewPassword());
-        }else {
-            // 非管理员修改密码
-            checkCaptcha(dto.getCaptchaCode(), dto.getCaptchaKey());
-            UserSimpleInfo userInfo = userClient.getUserInfo(dto.getAccount(), LoginType.ACCOUNT);
-            if (!Objects.equals(userInfo.getId(), userId)){
-                throw new BusinessException("你无法修改他人的密码");
-            }
 
-            updateUserPassword(userId,dto.getNewPassword());
-
+        if(userId == null){
+            throw new BusinessException("用户未登录");
         }
+
+        // 1. 查询当前用户
+        SysUser user = userService.getById(userId);
+
+        if(user == null){
+            throw new BusinessException("用户不存在");
+        }
+
+        //2. 参数校验
+        if(StrUtil.isBlank(dto.getOldPassword())
+                || StrUtil.isBlank(dto.getNewPassword())){
+            throw new BusinessException("密码不能为空");
+        }
+
+
+        //4. 新旧密码不能一致
+        if(BCrypt.checkpw(
+                dto.getNewPassword(),
+                user.getPassword()
+        )){
+            throw new BusinessException(
+                    "新密码不能和旧密码一致"
+            );
+        }
+
+        //5. 普通用户需要验证码
+        String roleCode = userRoleService.getRoleByuserId(userId);
+        //判断当前用户身份
+        boolean isAdmin =
+                Objects.equals(roleCode,
+                        RoleCodeType.SUPER_ADMIN.getCode()) ||
+                        Objects.equals(
+                                roleCode,
+                                RoleCodeType.DORM_MANAGER.getCode());
+        if(!isAdmin){
+            checkRedisCode(
+                    dto.getCaptchaCode(),
+                    dto.getCaptchaKey()
+            );
+
+            //3. 校验旧密码
+            if(!BCrypt.checkpw(
+                    dto.getOldPassword(),
+                    user.getPassword()
+            )){
+
+                throw new BusinessException("原密码错误");
+            }
+        }
+
+        //6. 更新密码
+        String password = BCrypt.hashpw(dto.getNewPassword());
+        userService.updateById(SysUser.builder()
+                        .id(userId)
+                        .password(password)
+                        .build());
+        //7. 删除旧登录状态
+        StpUtil.logout();
 
     }
 
     //更新用户密码
     private void updateUserPassword(Long id,String password){
+        //加密
         password = BCrypt.hashpw(password);
-        //发送mq更新user密码
-        UserSimpleInfo userSimpleInfo = new UserSimpleInfo();
-        userSimpleInfo.setId(id);
-        userSimpleInfo.setPassword(password);
-        mqUtil.updateUserInfo(userSimpleInfo);
+        //更新
+        userService.updateById(SysUser.builder().id(id).password(password).build());
     }
 
 
     //校验验证码
-    private void checkCaptcha(String code, String key) {
+    private void checkRedisCode(String code, String key) {
         if (StrUtil.isBlank(code)) {
             throw new BusinessException("验证码不能为空");
         }
@@ -237,10 +271,9 @@ public class authServiceImpl implements authService {
     public void updateAvatar(String avatarUrl) {
         Long userId = UserContext.getUserId();
         //更新用户头像
-        UserSimpleInfo userSimpleInfo = new UserSimpleInfo();
-        userSimpleInfo.setId(userId);
-        userSimpleInfo.setAvatar(avatarUrl);
-        mqUtil.updateUserInfo(userSimpleInfo);
+        userService.updateById(SysUser.builder()
+                .id(userId)
+                .avatar(avatarUrl).build());
     }
 
 
@@ -280,10 +313,10 @@ public class authServiceImpl implements authService {
     @Override
     public LoginVO EmailLogin(String email, String code) {
         // 1. 校验验证码
-        checkCaptcha(code ,RedisConstants.EMAIL_PREFIX+email);
+        checkRedisCode(code ,RedisConstants.EMAIL_PREFIX+email);
 
         // 2. 查询用户是否存在
-        UserSimpleInfo userInfo = userClient.getUserInfo(email, LoginType.EMAIL);
+        UserSimpleInfo userInfo = userService.getUserInfoByAccount(email, LoginType.EMAIL);
 
         if (userInfo == null){
             throw  new BusinessException("该用户不存在");
@@ -294,8 +327,10 @@ public class authServiceImpl implements authService {
         StpUtil.login(userId);
         String roleCode = userRoleService.getRoleByuserId(userInfo.getId());
         //更新最后登录时间
-        userInfo.setLastLoginTime(LocalDateTime.now());
-        mqUtil.updateUserInfo(userInfo);
+        //异步清除并更新登录时间
+        CompletableFuture.runAsync(()->{
+            userService.updateById(SysUser.builder().id(userInfo.getId()).lastLoginTime(LocalDateTime.now()).build());
+        },taskExecutor);
         // 6. 返回
         return LoginVO.builder()
                 .token(StpUtil.getTokenValue())
@@ -313,55 +348,77 @@ public class authServiceImpl implements authService {
     @Override
     public void bindEmail(BindEmailDTO dto) {
         // 1. 校验邮箱格式
-        boolean IsEmail = EmailUtil.isQQEmail(dto.getEmail());
-        if (!IsEmail){
+        if (!EmailUtil.isQQEmail(dto.getEmail())) {
             throw new BusinessException("邮箱格式不正确");
         }
-        // 2. 获取当前用户id
-        Long userId = StpUtil.getLoginIdAsLong();
+        // 2. 获取当前登录用户id
+        Long userId = UserContext.getUserId();
 
-        // 3. 查询用户
-        List<UserSimpleInfo> userInfoList = userClient.getUserInfoList(Collections.singletonList(userId));
-        UserSimpleInfo user = userInfoList.get(0);
+        // 3. 查询当前用户
+        SysUser user = userService.getById(userId);
+        if (user == null) {
+            throw new BusinessException("用户不存在");
+        }
+        // 4. 判断是否已经绑定邮箱
+        if (StrUtil.isNotBlank(user.getEmail())) {
+            throw new BusinessException("当前账号已经绑定邮箱");
+        }
+        // 5. 判断邮箱是否已经被其他用户绑定
+        UserSimpleInfo emailUser =
+                userService.getUserInfoByAccount(dto.getEmail(), LoginType.EMAIL);
+        if (emailUser != null) {
+            throw new BusinessException("该邮箱已经绑定其他账号");
+        }
+        // 6. 校验邮箱验证码
+        checkRedisCode(dto.getCode(), RedisConstants.EMAIL_PREFIX + dto.getEmail());
+
+        //7.更新
+        userService.updateById(SysUser.builder().id(userId).email(dto.getEmail()).build());
+    }
+
+
+
+    @Override
+    public void updateEmail(BindEmailDTO dto) {
+        //1. 校验邮箱格式
+        if (!EmailUtil.isQQEmail(dto.getEmail())) {
+            throw new BusinessException("邮箱格式不正确");
+        }
+
+        // 2. 获取当前登录用户id
+        Long userId = UserContext.getUserId();
+
+
+        // 3. 查询当前用户
+        SysUser user = userService.getById(userId);
+
         if(user == null){
             throw new BusinessException("用户不存在");
         }
-        // 4. 判断当前用户是否已经绑定邮箱
-        if(StrUtil.isNotBlank(user.getEmail())){
-            throw new BusinessException("当前账号已经绑定邮箱");
+
+
+        //3. 判断新邮箱是否和旧邮箱一致
+        if(dto.getEmail().equals(user.getEmail())){
+            throw new BusinessException("新邮箱不能和旧邮箱一致");
         }
 
-        // 5.  todo 判断邮箱是否已经被其他用户绑定
+        //4. 判断邮箱是否已经被绑定
 
-        // 7. 校验验证码
-        checkCaptcha(dto.getCode(),RedisConstants.EMAIL_PREFIX+dto.getEmail());
+        UserSimpleInfo emailUser = userService.getUserInfoByAccount(
+                        dto.getEmail(),
+                        LoginType.EMAIL);
 
-        // 8. 保存邮箱
-        UserSimpleInfo userSimpleInfo = new UserSimpleInfo();
-        userSimpleInfo.setId(userId);
-        userSimpleInfo.setEmail(dto.getEmail());
-        mqUtil.updateUserInfo(userSimpleInfo);
+
+        if(emailUser != null && !emailUser.getId().equals(userId)){
+            throw new BusinessException("该邮箱已经被绑定");
+        }
+
+        //5. 校验验证码
+        checkRedisCode(dto.getCode(), RedisConstants.EMAIL_PREFIX + dto.getEmail());
+
+        //6. 更新邮箱
+        userService.updateById(SysUser.builder().id(userId).email(dto.getEmail()).build());
     }
-
-
-    //todo
-    @Override
-    public void updateEmail(BindEmailDTO dto) {
-        //校验邮箱格式
-
-        //获取当前用户的id 用户是否存在
-
-        //判断当前用户的是否已经绑定
-
-        //判断当前邮箱是否已经被绑定
-
-        //从redis里获取验证码
-
-        // 校验验证码
-
-        //更新
-    }
-
 
 
    //定义脚本常量

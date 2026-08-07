@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="com.huashui.auth.mapper.SysRoleMapper">
+
+
+    <!--
+        查询用户角色
+        一个用户对应一个角色
+        sys_user_role负责关联
+    -->
+    <select id="selectUserRole"
+            resultType="com.huashui.auth.domain.vo.RoleVO">
+
+        SELECT
+            r.id,
+            r.role_name,
+            r.role_code,
+            r.description,
+            r.sort_order,
+            r.status,
+            r.create_time,
+            r.update_time
+
+        FROM sys_role r
+
+                 INNER JOIN sys_user_role ur
+                            ON r.id = ur.role_id
+
+        WHERE ur.user_id = #{userId}
+
+          AND r.is_deleted = 0
+
+    </select>
+
+
+
+    <!--
+        查询角色列表
+    -->
+    <select id="selectRoleList"
+            resultType="com.huashui.auth.domain.vo.RoleVO">
+
+        SELECT
+
+            id,
+            role_name,
+            role_code,
+            description,
+            sort_order,
+            status,
+            create_time,
+            update_time
+
+        FROM sys_role
+
+        WHERE is_deleted = 0
+
+        ORDER BY sort_order ASC, id ASC
+
+    </select>
+
+
+</mapper>
