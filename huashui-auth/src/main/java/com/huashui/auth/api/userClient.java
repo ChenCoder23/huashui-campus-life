@@ -1,17 +1,13 @@
 package com.huashui.auth.api;
 
-import com.huashui.api.domain.vo.CleanerSimpleVO;
+import com.huashui.api.domain.vo.task.CleanerSimpleVO;
 import com.huashui.auth.service.SysUserService;
 import com.huashui.common.domain.dto.UserSimpleInfo;
 import com.huashui.common.enums.LoginType;
 
 import com.huashui.common.response.Result;
 import jakarta.annotation.Resource;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -48,6 +44,13 @@ public class userClient {
     @GetMapping("/user/listByRole")
     Result<List<CleanerSimpleVO>> listByRole(@RequestParam("role") String role){
         return Result.ok(userService.listByRole(role));
+    }
+
+    @GetMapping("/{id}")
+    public UserSimpleInfo getUserInfoById(@PathVariable Long id){
+
+        return userService.getUserInfoById(id);
+
     }
 
 

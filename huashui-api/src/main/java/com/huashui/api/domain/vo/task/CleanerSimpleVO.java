@@ -1,4 +1,4 @@
-package com.huashui.api.domain.vo;
+package com.huashui.api.domain.vo.task;
 
 import lombok.Data;
 

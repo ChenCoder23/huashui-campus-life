@@ -5,11 +5,10 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.json.JSONUtil;
 import com.huashui.api.client.system.SystemClient;
 import com.huashui.api.client.user.UserClient;
-import com.huashui.api.domain.vo.CleanerSimpleVO;
+import com.huashui.api.domain.vo.task.CleanerSimpleVO;
 import com.huashui.attendance.domain.pojo.AttendanceRecord;
 import com.huashui.attendance.enums.AttendanceStatus;
 import com.huashui.attendance.service.AttendanceRecordService;
-import com.huashui.common.exception.BusinessException;
 import com.huashui.common.response.Result;
 import com.huashui.common.utils.SemesterUtil;
 import com.xxl.job.core.handler.annotation.XxlJob;
@@ -21,7 +20,6 @@ import org.springframework.stereotype.Component;
 
 
 import java.time.LocalDate;
-import java.util.Collections;
 import java.util.List;
 
 

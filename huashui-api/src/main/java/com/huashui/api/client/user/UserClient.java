@@ -1,13 +1,13 @@
 package com.huashui.api.client.user;
 
-import com.huashui.api.domain.vo.CleanerSimpleVO;
+import com.huashui.api.domain.vo.task.CleanerSimpleVO;
 import com.huashui.api.fallback.UserClientFallbackFactory;
 import com.huashui.common.domain.dto.UserSimpleInfo;
 import com.huashui.common.enums.LoginType;
 import com.huashui.common.response.Result;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
@@ -33,4 +33,10 @@ public interface UserClient {
      */
     @GetMapping("/user/listByRole")
     Result<List<CleanerSimpleVO>> listByRole(@RequestParam("role") String role);
+
+    /**
+     * 根据用户ID查询用户信息
+     */
+    @GetMapping("/user/inner/{id}")
+    UserSimpleInfo getUserInfoById(@PathVariable("id") Long id);
 }

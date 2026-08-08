@@ -14,7 +14,9 @@ public final class MQConstants {
     public static final String REPAIR_QUEUE = "huashui.repair.queue";
     public static final String REPAIR_CREATED_KEY = "repair.created";
     public static final String REPAIR_ASSIGNED_KEY = "repair.assigned";
-    public static final String REPAIR_COMPLETED_KEY = "repair.completed";
+    public static final String REPAIR_COMPLETED_MESSAGE_KEY = "repair.completed.message";
+    public static final String REPAIR_COMPLETED_EVALUATION_KEY = "repair.completed.evaluation";
+    public static final String REPAIR_CANCEL_KEY = "repair.cancel";
 
     // ---- 请假 ----
     public static final String LEAVE_QUEUE = "huashui.leave.queue";

@@ -1,6 +1,7 @@
 package com.huashui.task.domain.pojo;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.huashui.task.Enums.RepairTaskStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -54,7 +55,7 @@ public class RepairOrder {
     private String appointmentTime;
 
     @Schema(description = "工单状态")
-    private String status;
+    private RepairTaskStatus status;
 
     @Schema(description = "维修人员姓名（冗余）")
     private String repairerName;

@@ -4,6 +4,7 @@ import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.huashui.api.domain.vo.dorm.room.RoomVO;
 import com.huashui.common.enums.Status;
 import com.huashui.common.exception.BusinessException;
 import com.huashui.common.response.PageResult;
@@ -22,6 +23,7 @@ import com.huashui.dormitory.mapper.DormRoomMapper;
 import com.huashui.dormitory.service.DormRoomService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,6 +33,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class DormRoomServiceImpl extends ServiceImpl<DormRoomMapper, DormRoom> implements DormRoomService {
 
     private final DormBedMapper bedMapper;
+
+    private final DormRoomMapper roomMapper;
 
 
 
@@ -126,5 +130,16 @@ public class DormRoomServiceImpl extends ServiceImpl<DormRoomMapper, DormRoom> i
     public PageResult<DormRoom> getRoomPage(RoomPageDTO dto) {
         // todo 使用缓存
         return null;
+    }
+
+    @Override
+    public RoomVO getRoomInfoById(Long id) {
+        return roomMapper.getRoomInfoById(id);
+
+    }
+
+    @Override
+    public RoomVO getDetailRoomInfo(Long id) {
+        return roomMapper.getRoomDetailInfo(id);
     }
 }

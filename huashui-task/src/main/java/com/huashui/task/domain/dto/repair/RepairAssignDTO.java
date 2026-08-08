@@ -1,4 +1,4 @@
-package com.huashui.task.domain.repair;
+package com.huashui.task.domain.dto.repair;
 
 import lombok.Data;
 

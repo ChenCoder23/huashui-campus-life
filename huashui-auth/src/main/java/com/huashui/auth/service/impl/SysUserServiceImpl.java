@@ -4,7 +4,7 @@ import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 
 
-import com.huashui.api.domain.vo.CleanerSimpleVO;
+import com.huashui.api.domain.vo.task.CleanerSimpleVO;
 import com.huashui.auth.domain.pojo.SysUser;
 import com.huashui.auth.mapper.SysUserMapper;
 import com.huashui.auth.service.SysUserService;
@@ -15,6 +15,7 @@ import com.huashui.common.enums.LoginType;
 import com.huashui.common.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -108,6 +109,16 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     @Override
     public List<CleanerSimpleVO> listByRole(String role) {
         return userMapper.selectCleanerByRole(role);
+    }
+
+    @Override
+    public UserSimpleInfo getUserInfoById(Long id) {
+        SysUser user = getById(id);
+        UserSimpleInfo vo = new UserSimpleInfo();
+
+        BeanUtils.copyProperties(user,vo);;
+
+        return vo;
     }
 
 

@@ -1,7 +1,7 @@
 package com.huashui.auth.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.huashui.api.domain.vo.CleanerSimpleVO;
+import com.huashui.api.domain.vo.task.CleanerSimpleVO;
 import com.huashui.auth.domain.pojo.SysUser;
 import com.huashui.common.domain.dto.UserSimpleInfo;
 import com.huashui.common.enums.LoginType;
@@ -28,4 +28,6 @@ public interface SysUserService extends IService<SysUser> {
     void updatePassword(Long id, String password);
 
     List<CleanerSimpleVO> listByRole(String role);
+
+    UserSimpleInfo getUserInfoById(Long id);
 }

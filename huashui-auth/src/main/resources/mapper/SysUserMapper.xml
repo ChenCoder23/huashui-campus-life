@@ -7,7 +7,7 @@
 <mapper namespace="com.huashui.auth.mapper.SysUserMapper">
 
 
-    <select id="selectCleanerByRole" resultType="com.huashui.api.domain.vo.CleanerSimpleVO"
+    <select id="selectCleanerByRole" resultType="com.huashui.api.domain.vo.task.CleanerSimpleVO"
             parameterType="java.lang.String">
         SELECT
             u.id,

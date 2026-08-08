@@ -1,7 +1,7 @@
 package com.huashui.api.fallback;
 
 import com.huashui.api.client.user.UserClient;
-import com.huashui.api.domain.vo.CleanerSimpleVO;
+import com.huashui.api.domain.vo.task.CleanerSimpleVO;
 import com.huashui.common.domain.dto.UserSimpleInfo;
 import com.huashui.common.enums.LoginType;
 import com.huashui.common.response.Result;

@@ -3,5 +3,5 @@ package com.huashui.evaluation.controller;
 /**
  * @author
  */
-public class EvaluationController {
+public class EvaluationStatisticsController {
 }

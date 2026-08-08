@@ -1,25 +1,35 @@
 package com.huashui.task.service;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.huashui.task.domain.repair.RepairSubmitDTO;
+import com.huashui.common.response.PageResult;
+import com.huashui.common.response.Result;
+import com.huashui.task.domain.dto.query.RepairQueryDTO;
+import com.huashui.task.domain.dto.repair.RepairAssignDTO;
+import com.huashui.task.domain.dto.repair.RepairCompleteDTO;
+import com.huashui.task.domain.dto.repair.RepairCreateDTO;
 import com.huashui.task.domain.pojo.RepairOrder;
+import com.huashui.task.domain.vo.repair.RepairVO;
+import com.huashui.task.domain.vo.repair.repairDetailVO;
 
 public interface RepairOrderService extends IService<RepairOrder> {
 
-    Page<RepairOrder> page(Integer page, Integer size, String status, Long buildingId);
 
-    void submit(RepairSubmitDTO dto);
 
-    void assign(Long id, Long repairerId);
+    void createRepairOrder(RepairCreateDTO dto);
 
-    void startRepair(Long id);
+    PageResult<RepairVO> getMyRepairPage(RepairQueryDTO dto);
 
-    void complete(Long id, String repairResult, String repairImages);
+    Result<repairDetailVO> getDetailByOrderId(Long id);
 
-    void evaluate(Long id, Integer rating);
+    void cancelOrder(Long id);
 
-    void cancel(Long id);
+    PageResult<RepairVO> adminPage(RepairQueryDTO dto);
 
-    void exportData(String status, Long buildingId);
+    PageResult<RepairVO> workerRepairPage(RepairQueryDTO dto);
+
+    void assign(RepairAssignDTO dto);
+
+    void start(Long id);
+
+    void complete(RepairCompleteDTO dto);
 }
