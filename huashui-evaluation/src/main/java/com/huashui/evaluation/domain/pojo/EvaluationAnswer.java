@@ -4,12 +4,14 @@ package com.huashui.evaluation.domain.pojo;
 import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 
+
 import java.time.LocalDateTime;
 
 
+
 @Data
-@TableName("evaluation_score")
-public class EvaluationScore {
+@TableName("evaluation_answer")
+public class EvaluationAnswer {
 
 
     @TableId(type = IdType.AUTO)
@@ -19,27 +21,28 @@ public class EvaluationScore {
     /**
      * 评价记录ID
      */
-    private Long recordId;
+    private Long responseId;
 
 
     /**
-     * 评价维度ID
+     * 问题ID
      */
-    private Long dimensionId;
+    private Long questionId;
 
 
     /**
-     * 维度快照
-     */
-    private String dimensionName;
-
-
-    /**
-     * 1-5分
+     * 评分
      */
     private Integer score;
 
 
+    /**
+     * 文字回答
+     */
+    private String content;
+
+
+    @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;
 
 }

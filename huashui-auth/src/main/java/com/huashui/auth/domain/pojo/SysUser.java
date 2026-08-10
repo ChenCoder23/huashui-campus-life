@@ -56,8 +56,8 @@ public class SysUser {
     @Schema(description = "所属校区ID")
     private Long campusId;
 
-    @Schema(description = "所属学院ID")
-    private Long collegeId;
+    @Schema(description = "所属楼栋ID")
+    private Long building_id;
 
     @Schema(description = "专业名称")
     private String major;

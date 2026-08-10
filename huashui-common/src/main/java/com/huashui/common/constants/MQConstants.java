@@ -10,6 +10,8 @@ public final class MQConstants {
     // ---- 交换机 ----
     public static final String TOPIC_EXCHANGE = "huashui.topic";
 
+
+
     // ---- 报修 ----
     public static final String REPAIR_QUEUE = "huashui.repair.queue";
     public static final String REPAIR_CREATED_KEY = "repair.created";
@@ -37,4 +39,18 @@ public final class MQConstants {
     public static final String UPDATE_LOGIN_KEY = "user.login";
     public static final String UPDATE_LOGIN_QUEUE = "updateUserLoginTime";
 
+    // -----评估-----
+    //延迟交换机
+    public static final String DELAY_EXCHANGE = "evaluation.delay.exchange";
+    //死信交换机
+    public static final String DLX_EXCHANGE = "evaluation.dlx.exchange";
+    //评估问卷开始延迟队列
+    public static final String EVALUATION_START_DELAY_QUEUE = "evaluation.start.delay.queue";
+    //评估问卷结束延迟队列
+    public static final String EVALUATION_END_DELAY_QUEUE = "evaluation.finish.delay.queue";
+
+    //评估问卷开始死信业务队列
+    public static final String EVALUATION_START_QUEUE = "evaluation.start.queue";
+    //评估问卷结束死信业务队列队列
+    public static final String EVALUATION_END_QUEUE = "evaluation.finish.queue";
 }
