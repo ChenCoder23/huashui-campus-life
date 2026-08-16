@@ -17,16 +17,29 @@ public class FeignRequestInterceptorConfig {
             // 拿到当前正在处理的HTTP请求（即user服务收到的原始请求）
             ServletRequestAttributes attributes =
                 (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-            
-            if (attributes != null) {
-                HttpServletRequest request = attributes.getRequest();
-                String userId = request.getHeader("X-User-Id");
-                
-                if (StringUtils.isNotBlank(userId)) {
-                    // 把当前请求的X-User-Id续传到即将发起的Feign请求里
-                    template.header("X-User-Id", userId);
-                }
+
+            if (attributes == null) {
+                return;
             }
+
+            //获取request
+            HttpServletRequest request = attributes.getRequest();
+
+
+            String userId = request.getHeader("X-User-Id");
+
+            String role = request.getHeader("X-User-Role");
+
+            if (userId != null && !userId.isBlank()) {
+                //将userid放入请求头
+                template.header("X-User-Id", userId);
+            }
+
+            if (role != null && !role.isBlank()) {
+                //将roled放入请求头
+                template.header("X-User-Role", role);
+            }
+
         };
     }
 }

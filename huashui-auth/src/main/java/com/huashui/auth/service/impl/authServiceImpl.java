@@ -131,10 +131,7 @@ public class authServiceImpl implements authService {
         String roleCode = userRoleService.getRoleByuserId(userInfo.getId());
         StpUtil.getSession().set("role", roleCode);
 
-
         userInfo.setLastLoginTime(LocalDateTime.now());
-
-
         //异步清除并更新登录时间
         CompletableFuture.runAsync(()->{
             userService.updateById(SysUser.builder().id(userInfo.getId()).lastLoginTime(LocalDateTime.now()).build());
@@ -326,6 +323,7 @@ public class authServiceImpl implements authService {
         // 3. Sa-Token 登录签发token
         StpUtil.login(userId);
         String roleCode = userRoleService.getRoleByuserId(userInfo.getId());
+        StpUtil.getSession().set("role", roleCode);
         //更新最后登录时间
         //异步清除并更新登录时间
         CompletableFuture.runAsync(()->{

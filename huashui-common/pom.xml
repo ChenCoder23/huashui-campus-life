@@ -75,7 +75,12 @@
             <groupId>org.springframework.amqp</groupId>
             <artifactId>spring-rabbit</artifactId>
         </dependency>
-
+        <dependency>
+            <groupId>cn.dev33</groupId>
+            <artifactId>sa-token-core</artifactId>
+            <version>1.44.0</version>
+            <scope>compile</scope>
+        </dependency>
 
 
     </dependencies>

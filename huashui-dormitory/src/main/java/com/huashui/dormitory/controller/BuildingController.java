@@ -29,8 +29,8 @@ public class BuildingController {
 
     @GetMapping
     @Operation(summary = "楼栋列表（分页）")
-    public Result<PageResult<BuildingPageVO>> list(BuildingPageDTO dto) {
-        return Result.ok(buildingService.getBuildingsPage(dto));
+    public PageResult<BuildingPageVO> list(BuildingPageDTO dto) {
+        return buildingService.getBuildingsPage(dto);
     }
 
     @PostMapping

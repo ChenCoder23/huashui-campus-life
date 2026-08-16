@@ -122,7 +122,6 @@ public class DormBuildingServiceImpl extends ServiceImpl<DormBuildingMapper, Dor
     //分页查询楼栋信息
     @Override
     public PageResult<BuildingPageVO> getBuildingsPage(BuildingPageDTO dto) {
-
         Page<DormBuilding> page = lambdaQuery()
                 .eq(StrUtil.isNotBlank(dto.getBuildingName()),DormBuilding::getBuildingName,dto.getBuildingName())
                 .eq(StrUtil.isNotBlank(dto.getBuildingCode()),DormBuilding::getBuildingCode,dto.getBuildingCode())
@@ -133,8 +132,7 @@ public class DormBuildingServiceImpl extends ServiceImpl<DormBuildingMapper, Dor
         List<BuildingPageVO> buildingPageVOList = BeanUtil.copyToList(page.getRecords(), BuildingPageVO.class);
 
 
-        IPage<BuildingPageVO> voPage =
-                page.convert(item -> BeanUtil.copyProperties(item, BuildingPageVO.class));
+        IPage<BuildingPageVO> voPage = page.convert(item -> BeanUtil.copyProperties(item, BuildingPageVO.class));
         // 填充校区名称
         fillCampusName(voPage.getRecords());
 
@@ -153,12 +151,7 @@ public class DormBuildingServiceImpl extends ServiceImpl<DormBuildingMapper, Dor
                 .in(DormBuilding::getId, ids)
                 .list()
                 .stream()
-                .collect(
-                        Collectors.toMap(
-                                DormBuilding::getId,
-                                DormBuilding::getBuildingName
-                        )
-                );
+                .collect(Collectors.toMap(DormBuilding::getId, DormBuilding::getBuildingName));
     }
 
     //todo
