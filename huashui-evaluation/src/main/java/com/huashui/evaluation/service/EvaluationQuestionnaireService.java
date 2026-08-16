@@ -10,6 +10,9 @@ import com.huashui.evaluation.domain.dto.UpdateQuestionnaireDTO;
 import com.huashui.evaluation.domain.pojo.EvaluationQuestionnaire;
 import com.huashui.evaluation.domain.vo.QuestionnaireDetailVO;
 import com.huashui.evaluation.domain.vo.QuestionnaireVO;
+import com.huashui.evaluation.domain.vo.StudentQuestionnaireVO;
+
+import java.util.List;
 
 
 public interface EvaluationQuestionnaireService extends IService<EvaluationQuestionnaire> {
@@ -26,11 +29,11 @@ public interface EvaluationQuestionnaireService extends IService<EvaluationQuest
 
     QuestionnaireDetailVO detail(Long id);
 
-
-
     void updateEvaluation(Long id, UpdateQuestionnaireDTO dto);
 
     void deleteEvaluation(Long id);
 
     void PreFinish(Long id);
+
+    List<StudentQuestionnaireVO> myQuestionnaire();
 }

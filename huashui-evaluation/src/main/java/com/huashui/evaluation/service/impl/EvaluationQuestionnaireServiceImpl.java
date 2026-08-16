@@ -24,6 +24,7 @@ import com.huashui.evaluation.domain.pojo.EvaluationResponse;
 import com.huashui.evaluation.domain.vo.QuestionItemVO;
 import com.huashui.evaluation.domain.vo.QuestionnaireDetailVO;
 import com.huashui.evaluation.domain.vo.QuestionnaireVO;
+import com.huashui.evaluation.domain.vo.StudentQuestionnaireVO;
 import com.huashui.evaluation.mapper.EvaluationQuestionnaireMapper;
 
 import com.huashui.evaluation.service.EvaluationQuestionItemService;
@@ -38,8 +39,11 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -416,6 +420,60 @@ public class EvaluationQuestionnaireServiceImpl extends ServiceImpl<EvaluationQu
         redisTemplate.delete("evaluation:waiting:" + id);
         //  删除评价结束的消息版本号
         redisTemplate.delete("evaluation:version:end:" + id);
+    }
+
+    @Override
+    public List<StudentQuestionnaireVO> myQuestionnaire() {
+
+        //获取当前学生的id
+        Long studentId = UserContext.getUserId();
+
+        //1. 查询所有进行中的问卷
+        List<EvaluationQuestionnaire> questionnaires =
+                list(new LambdaQueryWrapper<EvaluationQuestionnaire>()
+                        .eq(EvaluationQuestionnaire::getStatus, QuestionStatus.RUNNING));
+        if(CollUtil.isEmpty(questionnaires)){
+            return Collections.emptyList();
+
+        }
+
+        //2. 筛选Redis中包含当前学生的问卷
+        List<EvaluationQuestionnaire> needEvaluation =
+                questionnaires.stream()
+                        .filter(q -> {
+                            //拼装reids的key
+                            String key = "evaluation:waiting:" + q.getId();
+                            Boolean exists = redisTemplate.opsForSet().isMember(key, studentId);
+                            return Boolean.TRUE.equals(exists);
+                        })
+                        .toList();
+
+        if(CollUtil.isEmpty(needEvaluation)){
+            return Collections.emptyList();
+
+        }
+        //3. 查询所有问卷的问题数量
+        //获取需要评价的问卷的id
+        List<Long> questionnaireIds = needEvaluation.stream()
+                        .map(EvaluationQuestionnaire::getId)
+                        .toList();
+        Map<Long, Integer> questionCountMap =
+                questionItemService.list(new LambdaQueryWrapper<EvaluationQuestionItem>()
+                                        .in(EvaluationQuestionItem::getQuestionnaireId, questionnaireIds))
+                        .stream()
+                        .collect(Collectors.groupingBy(EvaluationQuestionItem::getQuestionnaireId,
+                                Collectors.collectingAndThen(Collectors.counting(), Long::intValue)));
+
+        //3. 转VO
+        return needEvaluation.stream()
+                .map(q -> {
+                    StudentQuestionnaireVO vo = new StudentQuestionnaireVO();
+                    BeanUtil.copyProperties(q, vo);
+                    //设置问卷的问题数量
+                    vo.setQuestionCount(questionCountMap.getOrDefault(q.getId(), 0));
+                    return vo;})
+                .toList();
+
     }
 
 

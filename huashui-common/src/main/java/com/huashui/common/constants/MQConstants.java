@@ -5,6 +5,10 @@ package com.huashui.common.constants;
  */
 public final class MQConstants {
 
+    public static final String EVALUATION_START_KEY = "evaluation.start";
+    public static final String EVALUATION_FINISH_KEY = "evaluation.end";
+    public static final String EVALUATION_START_DELAY_KEY = "evaluation.start.delay";
+    public static final String EVALUATION_FINISH_DELAY_KEY = "evaluation.end.delay";
     private MQConstants() {}
 
     // ---- 交换机 ----
@@ -25,6 +29,7 @@ public final class MQConstants {
     public static final String LEAVE_SUBMITTED_KEY = "leave.submitted";
     public static final String LEAVE_APPROVED_KEY = "leave.approved";
     public static final String LEAVE_REJECTED_KEY = "leave.rejected";
+    public static final String LEAVE_CANCELLED_KEY = "leave.cancelled";
 
     // ---- 缴费 ----
     public static final String PAY_QUEUE = "huashui.pay.queue";
@@ -53,4 +58,20 @@ public final class MQConstants {
     public static final String EVALUATION_START_QUEUE = "evaluation.start.queue";
     //评估问卷结束死信业务队列队列
     public static final String EVALUATION_END_QUEUE = "evaluation.finish.queue";
+
+    // -----校园公告-----
+    //延迟交换机
+    public static final String DELAY_EXCHANGE_NOTICE = "notice.delay.exchange";
+    //死信交换机
+    public static final String DLX_EXCHANGE_NOTICE = "notice.dlx.exchange";
+    //延迟队列
+    public static final String DELAY_QUEUE_NOTICE = "notice.delay.queue";
+    //死信队列
+    public static final String DLX_QUEUE_NOTICE = "notice.dlx.queue";
+    //延迟消息key
+    public static final String NOTICE_DELAY_KEY = "notice.delay.key";
+    //死信key
+    public static final String NOTICE_DLX_KEY = "notice.dlx.key";
+
+
 }

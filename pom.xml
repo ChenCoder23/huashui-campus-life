@@ -47,9 +47,8 @@
         <module>huashui-attendance-service</module>
         <module>huashui-leave-service</module>
         <module>huashui-task</module>
-        <module>huashui-message-announcement</module>
-        <module>huashui-message-notification</module>
-        <module>huashui-message-template</module>
+        <module>huashui-message</module>
+
     </modules>
 
     <dependencyManagement>

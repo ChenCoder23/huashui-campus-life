@@ -1,5 +1,7 @@
 package com.huashui.evaluation.domain.vo;
 
+import com.huashui.evaluation.Enums.QuestionStatus;
+import com.huashui.evaluation.Enums.StudentEvaluationStatus;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -48,7 +50,7 @@ public class QuestionnaireDetailVO {
     /**
      * 状态
      */
-    private String status;
+    private QuestionStatus status;
 
 
     /**

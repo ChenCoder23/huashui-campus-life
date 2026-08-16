@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.huashui.common.enums.Status;
 import com.huashui.common.exception.BusinessException;
+import com.huashui.common.response.PageResult;
 import com.huashui.dormitory.domain.dto.CampusDTO;
 import com.huashui.dormitory.domain.pojo.DormBuilding;
 import com.huashui.dormitory.domain.pojo.SysCampus;
@@ -32,8 +33,9 @@ public class SysCampusServiceImpl
     private final DormBuildingMapper buildingMapper;
 
     @Override
-    public Page<SysCampus> page(Integer page, Integer size) {
-        return lambdaQuery().orderByAsc(SysCampus::getSortOrder).page(new Page<>(page, size));
+    public PageResult<SysCampus> page(Integer page, Integer size) {
+        Page<SysCampus> paged = lambdaQuery().orderByAsc(SysCampus::getSortOrder).page(new Page<>(page, size));
+        return PageResult.of(paged.getTotal(),paged.getPages(),paged.getSize(),paged.getRecords());
     }
 
     @Override

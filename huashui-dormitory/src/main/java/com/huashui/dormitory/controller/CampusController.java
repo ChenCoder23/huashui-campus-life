@@ -1,6 +1,7 @@
 package com.huashui.dormitory.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.huashui.common.response.PageResult;
 import com.huashui.common.response.Result;
 import com.huashui.dormitory.domain.dto.CampusDTO;
 import com.huashui.dormitory.domain.pojo.SysCampus;
@@ -25,10 +26,10 @@ public class CampusController {
 
     @GetMapping
     @Operation(summary = "校区列表（分页）")
-    public Result<Page<SysCampus>> list(
+    public PageResult<SysCampus> list(
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "10") Integer size) {
-        return Result.ok(campusService.page(page, size));
+        return campusService.page(page, size);
     }
 
     @PostMapping

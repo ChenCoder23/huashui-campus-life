@@ -1,5 +1,6 @@
 package com.huashui.attendance.service;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.huashui.api.domain.dto.attendance.LeaveAttendanceDTO;
 import com.huashui.attendance.domain.dto.AttendanceQueryDTO;
 import com.huashui.attendance.domain.dto.AttendanceStatusUpdateDTO;
 import com.huashui.attendance.domain.dto.CheckInDTO;
@@ -24,4 +25,7 @@ public interface AttendanceRecordService extends IService<AttendanceRecord> {
     PageResult<AttendanceVO> pageQuery(AttendanceQueryDTO dto);
 
     void updateAttendance(AttendanceStatusUpdateDTO dto);
+
+    /** 保洁人员请假后写入考勤记录 */
+    void addLeaveRecord(LeaveAttendanceDTO dto);
 }

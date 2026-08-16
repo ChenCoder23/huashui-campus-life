@@ -1,6 +1,6 @@
 package com.huashui.dormitory.controller;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+
 import com.huashui.common.response.PageResult;
 import com.huashui.common.response.Result;
 import com.huashui.dormitory.domain.dto.BuildingConfigDTO;

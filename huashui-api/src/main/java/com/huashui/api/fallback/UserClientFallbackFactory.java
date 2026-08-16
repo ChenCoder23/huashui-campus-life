@@ -39,6 +39,10 @@ public class UserClientFallbackFactory
             public Result<List<CleanerSimpleVO>> listByRole(String role) {
                 return null;
             }
+            @Override
+            public UserSimpleInfo getUserInfoById(Long id) {
+                return null;
+            }
 
 
         };

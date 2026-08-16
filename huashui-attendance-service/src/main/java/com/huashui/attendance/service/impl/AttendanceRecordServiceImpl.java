@@ -1,4 +1,5 @@
 package com.huashui.attendance.service.impl;
+import com.huashui.api.domain.dto.attendance.LeaveAttendanceDTO;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -254,6 +255,39 @@ public class AttendanceRecordServiceImpl extends ServiceImpl<AttendanceRecordMap
         updateById(record);
     }
 
+
+
+    @Override
+    @Transactional
+    public void addLeaveRecord(LeaveAttendanceDTO dto) {
+        LocalDate start = dto.getStartDate();
+        LocalDate end = dto.getEndDate();
+        if (start == null || end == null) {
+            throw new BusinessException("请假日期不能为空");
+        }
+        // 为请假日期范围内的每一天写入/更新考勤记录
+        for (LocalDate date = start; !date.isAfter(end); date = date.plusDays(1)) {
+            AttendanceRecord record = lambdaQuery()
+                    .eq(AttendanceRecord::getWorkerId, dto.getWorkerId())
+                    .eq(AttendanceRecord::getAttendanceDate, date)
+                    .one();
+            if (record == null) {
+                record = new AttendanceRecord();
+                record.setWorkerId(dto.getWorkerId());
+                record.setCampusId(dto.getCampusId());
+                record.setAttendanceDate(date);
+                record.setCheckInStatus(AttendanceStatus.LEAVE);
+                record.setIsHoliday(false);
+                record.setRemark(dto.getRemark());
+                save(record);
+            } else if (record.getCheckInTime() == null) {
+                // 已有记录且未签到，改为请假状态
+                record.setCheckInStatus(AttendanceStatus.LEAVE);
+                record.setRemark(dto.getRemark());
+                updateById(record);
+            }
+        }
+    }
 
     //根据考勤状态统计考勤数量
     private int countStatus(List<AttendanceRecord> list, AttendanceStatus status){
