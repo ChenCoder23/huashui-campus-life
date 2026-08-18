@@ -28,13 +28,13 @@ public class BuildingController {
     private final DormBuildingService buildingService;
 
     @GetMapping
-    @Operation(summary = "楼栋列表（分页）")
+    @Operation(summary = "楼栋列表（分页）超级管理员使用")
     public PageResult<BuildingPageVO> list(BuildingPageDTO dto) {
         return buildingService.getBuildingsPage(dto);
     }
 
     @PostMapping
-    @Operation(summary = "新增楼栋（含硬件配置）")
+    @Operation(summary = "新增楼栋（含硬件配置）超级管理员使用")
     public Result<Void> create(@Valid @RequestBody BuildingCreateDTO dto) {
         buildingService.create(dto);
         return Result.ok();

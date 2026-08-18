@@ -12,31 +12,18 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
-@FeignClient(name="huashui-user",fallbackFactory = UserClientFallbackFactory.class)
+@FeignClient(name="huashui-auth", fallbackFactory = UserClientFallbackFactory.class)
 public interface UserClient {
 
-
-    //根据账号获取用户的基本信息
     @GetMapping("/user/inner/userInfo")
-    UserSimpleInfo getUserInfo(@RequestParam String account , @RequestParam LoginType type);
+    UserSimpleInfo getUserInfo(@RequestParam String account, @RequestParam LoginType type);
 
+    @GetMapping("/user/inner/list")
+    List<UserSimpleInfo> getUserInfoList(@RequestParam List<Long> userIds);
 
-
-    // 根据Id列表查询用户信息
-    @GetMapping("user/inner/list")
-    public List<UserSimpleInfo> getUserInfoList(@RequestParam List<Long> userIds) ;
-
-    /**
-     * 根据角色查询用户
-     *
-     * @param role 角色编码
-     */
-    @GetMapping("/user/listByRole")
+    @GetMapping("/user/inner/user/listByRole")
     Result<List<CleanerSimpleVO>> listByRole(@RequestParam("role") String role);
 
-    /**
-     * 根据用户ID查询用户信息
-     */
     @GetMapping("/user/inner/{id}")
     UserSimpleInfo getUserInfoById(@PathVariable("id") Long id);
 }

@@ -4,6 +4,7 @@ import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.huashui.api.domain.vo.dorm.room.RoomDetailVO;
 import com.huashui.api.domain.vo.dorm.room.RoomVO;
 import com.huashui.common.enums.Status;
 import com.huashui.common.exception.BusinessException;
@@ -36,9 +37,6 @@ public class DormRoomServiceImpl extends ServiceImpl<DormRoomMapper, DormRoom> i
 
     private final DormRoomMapper roomMapper;
 
-
-
-    //新增房间 自动生成床位
     @Override
     @Transactional
     public void create(RoomCreateDTO dto) {
@@ -46,18 +44,16 @@ public class DormRoomServiceImpl extends ServiceImpl<DormRoomMapper, DormRoom> i
         room.setOccupiedBeds(0);
         room.setStatus(RoomStatus.EMPTY);
         save(room);
-        // 自动生成空床位 A/B/C/D...
         char[] labels = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'};
         for (int i = 0; i < dto.getTotalBeds() && i < labels.length; i++) {
             DormBed bed = new DormBed();
             bed.setRoomId(room.getId());
             bed.setBedNumber(String.valueOf(labels[i]));
-            bed.setStatus(BedStatus.FREE); //默认空闲
+            bed.setStatus(BedStatus.FREE);
             bedMapper.insert(bed);
         }
     }
 
-    //更新房间信息
     @Override
     @Transactional
     public void update(Long id, RoomUpdateDTO dto) {
@@ -67,7 +63,6 @@ public class DormRoomServiceImpl extends ServiceImpl<DormRoomMapper, DormRoom> i
         updateById(room);
     }
 
-    //删除房间
     @Override
     @Transactional
     public void deleteById(Long id) {
@@ -75,11 +70,9 @@ public class DormRoomServiceImpl extends ServiceImpl<DormRoomMapper, DormRoom> i
         if (room == null) throw new BusinessException("房间不存在");
         if (room.getOccupiedBeds() > 0) throw new BusinessException("房间有人入住，无法删除");
         bedMapper.delete(new LambdaQueryWrapper<DormBed>().eq(DormBed::getRoomId, id));
-        removeById(id); // todo 把房间的状态改为封闭
-
+        removeById(id);
     }
 
-    //查询房间的详细信息
     @Override
     public DormRoom getDetail(Long id) {
         DormRoom room = getById(id);
@@ -91,8 +84,6 @@ public class DormRoomServiceImpl extends ServiceImpl<DormRoomMapper, DormRoom> i
     @Transactional
     public void batchCreate(RoomBatchCreateDTO dto) {
         for (int floor = dto.getStartFloor(); floor <= dto.getEndFloor(); floor++) {
-
-            // todo 使用异步线程池 使用saveBeanch()批量保存
             for (int r = 1; r <= dto.getRoomsPerFloor(); r++) {
                 String roomNo = floor + String.format("%02d", r);
                 DormRoom room = new DormRoom();
@@ -128,18 +119,16 @@ public class DormRoomServiceImpl extends ServiceImpl<DormRoomMapper, DormRoom> i
 
     @Override
     public PageResult<DormRoom> getRoomPage(RoomPageDTO dto) {
-        // todo 使用缓存
         return null;
     }
 
     @Override
     public RoomVO getRoomInfoById(Long id) {
         return roomMapper.getRoomInfoById(id);
-
     }
 
     @Override
-    public RoomVO getDetailRoomInfo(Long id) {
+    public RoomDetailVO getDetailRoomInfo(Long id) {
         return roomMapper.getRoomDetailInfo(id);
     }
 }

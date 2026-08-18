@@ -1,0 +1,17 @@
+<script setup lang="ts">
+import { onMounted, reactive, ref } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { repairApi } from '@/api'
+
+const rows=ref<any[]>([]); const total=ref(0); const loading=ref(false)
+const query=reactive({pageNum:1,pageSize:10,status:''})
+const createVisible=ref(false)
+const form=reactive({roomId:'',repairType:'',description:'',images:[],contactPhone:'',appointmentTime:''})
+
+async function load(){loading.value=true;try{const params={...query};Object.keys(params).forEach(k=>{if(params[k]===''||params[k]==null)delete params[k]});const raw:any=await repairApi.studentPage(params);const body=raw?.data??raw;rows.value=body?.records??[];total.value=Number(body?.total??rows.value.length)}finally{loading.value=false}}
+async function submit(){try{await repairApi.studentCreate({...form});ElMessage.success('报修成功');createVisible.value=false;load()}catch{}}
+async function cancel(row:any){await ElMessageBox.confirm('确定取消该报修吗？','提示',{type:'warning'});try{await repairApi.studentCancel(row.id);ElMessage.success('已取消');load()}catch{}}
+onMounted(load)
+</script>
+<template><section class="hs-page"><div class="hs-page-title"><div class="cn">我的报修</div><div class="en">My Repairs</div><div class="hs-waterline"></div></div><div class="hs-panel"><el-form inline @submit.prevent><el-form-item label="状态"><el-select v-model="query.status" clearable style="width:140px"><el-option v-for="s in ['PENDING','ASSIGNED','REPAIRING','COMPLETED','CANCELLED']" :key="s" :label="s" :value="s"/></el-select></el-form-item><el-button type="primary" @click="load">查询</el-button><el-button type="primary" plain @click="createVisible=true">我要报修</el-button></el-form><el-table :data="rows" border stripe v-loading="loading"><el-table-column prop="id" label="ID" width="70"/><el-table-column prop="orderNo" label="工单号"/><el-table-column prop="repairType" label="类型"/><el-table-column prop="status" label="状态"/><el-table-column prop="repairerName" label="维修工"/><el-table-column prop="createTime" label="提交时间"/><el-table-column label="操作" width="100" fixed="right"><template #default="{ row }"><el-button v-if="row.status==='PENDING'" link type="danger" @click="cancel(row)">取消</el-button></template></el-table-column></el-table><div class="pager"><el-pagination v-model:current-page="query.pageNum" v-model:page-size="query.pageSize" :total="total" layout="total, prev, pager, next" @current-change="load"/></div></div><el-dialog v-model="createVisible" title="我要报修" width="560px" destroy-on-close><el-form :model="form" label-width="90px"><el-form-item label="房间ID"><el-input v-model="form.roomId"/></el-form-item><el-form-item label="维修类型"><el-input v-model="form.repairType"/></el-form-item><el-form-item label="预约时间"><el-input v-model="form.appointmentTime"/></el-form-item><el-form-item label="联系电话"><el-input v-model="form.contactPhone"/></el-form-item><el-form-item label="问题描述"><el-input v-model="form.description" type="textarea" :rows="4"/></el-form-item><el-form-item label="图片URL"><el-input v-model="form.images" placeholder="多个URL用逗号分隔" /></el-form-item></el-form><template #footer><el-button @click="createVisible=false">取消</el-button><el-button type="primary" @click="submit">提交</el-button></template></el-dialog></section></template>
+<style scoped>.pager{display:flex;justify-content:flex-end;margin-top:16px}</style>

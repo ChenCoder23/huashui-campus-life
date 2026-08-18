@@ -2,6 +2,7 @@ package com.huashui.dormitory.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.huashui.api.domain.vo.dorm.room.RoomDetailVO;
 import com.huashui.api.domain.vo.dorm.room.RoomVO;
 import com.huashui.common.response.PageResult;
 import com.huashui.dormitory.domain.dto.RoomBatchCreateDTO;
@@ -11,8 +12,6 @@ import com.huashui.dormitory.domain.dto.RoomUpdateDTO;
 import com.huashui.dormitory.domain.pojo.DormRoom;
 
 public interface DormRoomService extends IService<DormRoom> {
-
-
 
     void create(RoomCreateDTO dto);
 
@@ -32,5 +31,5 @@ public interface DormRoomService extends IService<DormRoom> {
 
     RoomVO getRoomInfoById(Long id);
 
-    RoomVO getDetailRoomInfo(Long id);
+    RoomDetailVO getDetailRoomInfo(Long id);
 }

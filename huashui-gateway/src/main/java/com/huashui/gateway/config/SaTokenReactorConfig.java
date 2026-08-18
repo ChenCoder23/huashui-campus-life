@@ -1,37 +1,45 @@
 package com.huashui.gateway.config;
 
+import cn.dev33.satoken.reactor.context.SaReactorSyncHolder;
 import cn.dev33.satoken.reactor.filter.SaReactorFilter;
 import cn.dev33.satoken.stp.StpUtil;
+import com.huashui.gateway.Filter.AuthGlobalFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.server.ServerWebExchange;
 
-/**
- * Sa-Token Reactor 配置 (Spring Cloud Gateway / WebFlux)
- *
- * <p>WebFlux 模式下不会自动注册 SaReactorFilter，
- * 必须显式注册此 Bean，否则所有鉴权请求返回 401。</p>
- */
 @Configuration
 public class SaTokenReactorConfig {
 
     @Bean
     public SaReactorFilter saReactorFilter() {
         return new SaReactorFilter()
-                // 拦截所有路径
                 .addInclude("/**")
-                // 放行白名单
                 .addExclude(
                         "/auth/login",
                         "/auth/logout",
                         "/auth/captcha",
+                        "/auth/email/login",
+                        "/auth/bind/email/send-code",
                         "/auth/register",
+                        "/notice/latest",
                         "/doc.html",
                         "/webjars/**",
                         "/v3/api-docs/**",
                         "/swagger-resources/**",
                         "/favicon.ico"
                 )
-                // 认证规则：未登录拒绝
+                .setBeforeAuth(obj -> {
+                    try {
+                        ServerWebExchange exchange = SaReactorSyncHolder.getExchange();
+                        if (exchange != null && StpUtil.isLogin()) {
+                            exchange.getAttributes().put(AuthGlobalFilter.USER_ID_HEADER, StpUtil.getLoginIdAsString());
+                            exchange.getAttributes().put(AuthGlobalFilter.USER_ROLE_HEADER, StpUtil.getSession().getString("role"));
+                        }
+                    } catch (Exception ignored) {
+                        // 未登录或 token 无效时由后续 SaReactorFilter 统一处理
+                    }
+                })
                 .setAuth(obj -> StpUtil.checkLogin());
     }
 }

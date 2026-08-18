@@ -32,6 +32,8 @@ public class SysCampusServiceImpl
 
     private final DormBuildingMapper buildingMapper;
 
+    private final SysCampusMapper campusMapper;
+
     @Override
     public PageResult<SysCampus> page(Integer page, Integer size) {
         Page<SysCampus> paged = lambdaQuery().orderByAsc(SysCampus::getSortOrder).page(new Page<>(page, size));
@@ -66,8 +68,7 @@ public class SysCampusServiceImpl
         }
         SysCampus campus = getById(id);
         if (campus == null) throw new BusinessException("校区不存在");
-        campus.setStatus(Status.DISABLED);
-        updateById(campus);
+       campusMapper.deleteById(id);
     }
 
     @Override

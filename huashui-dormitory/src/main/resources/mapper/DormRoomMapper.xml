@@ -3,60 +3,47 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-
 <mapper namespace="com.huashui.dormitory.mapper.DormRoomMapper">
-
 
     <select id="getRoomInfoById" resultType="com.huashui.api.domain.vo.dorm.room.RoomVO"
             parameterType="java.lang.Long">
-
         SELECT
-            r.id,
-            r.room_number,
-            r.building_id,
-            b.campus_id
-
+            r.id AS id,
+            r.room_number AS roomNo,
+            r.building_id AS buildingId,
+            b.campus_id AS campusId
         FROM dorm_room r
-
-                 LEFT JOIN dorm_building b
-                           ON r.building_id = b.id
-
+        LEFT JOIN dorm_building b ON r.building_id = b.id
         WHERE r.id = #{id}
     </select>
 
-    <select id="getRoomDetailInfo" resultType="com.huashui.api.domain.vo.dorm.room.RoomVO"
+    <select id="getRoomDetailInfo" resultType="com.huashui.api.domain.vo.dorm.room.RoomDetailVO"
             parameterType="java.lang.Long">
         SELECT
-
-            r.id AS room_id,
-
-            r.room_number,
-
-
-            b.id AS building_id,
-
-            b.building_name,
-
-
-            b.campus_id,
-
-
-            c.campus_name
-
-
+            r.id AS roomId,
+            r.room_number AS roomNumber,
+            b.id AS buildingId,
+            b.building_name AS buildingName,
+            b.campus_id AS campusId,
+            c.campus_name AS campusName
         FROM dorm_room r
-
-
-                 LEFT JOIN dorm_building b
-                           ON r.building_id = b.id
-
-
-                 LEFT JOIN sys_campus c
-                           ON b.campus_id = c.id
-
-
+        LEFT JOIN dorm_building b ON r.building_id = b.id
+        LEFT JOIN sys_campus c ON b.campus_id = c.id
         WHERE r.id = #{id}
+    </select>
 
-
+    <select id="countAvailableRooms" resultType="java.util.HashMap">
+        SELECT
+            building_id AS buildingId,
+            COUNT(*) AS roomCount
+        FROM dorm_room
+        WHERE is_deleted = 0
+          AND occupied_beds &lt; total_beds
+          AND status = 'NORMAL'
+          AND building_id IN
+        <foreach collection="buildingIds" item="buildingId" open="(" separator="," close=")">
+            #{buildingId}
+        </foreach>
+        GROUP BY building_id
     </select>
 </mapper>

@@ -7,6 +7,8 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.huashui.api.client.user.UserClient;
+import com.huashui.common.domain.dto.UserSimpleInfo;
 import com.huashui.common.enums.Status;
 import com.huashui.common.exception.BusinessException;
 import com.huashui.common.response.PageResult;
@@ -14,22 +16,21 @@ import com.huashui.dormitory.domain.dto.BuildingConfigDTO;
 import com.huashui.dormitory.domain.dto.BuildingCreateDTO;
 import com.huashui.dormitory.domain.dto.BuildingPageDTO;
 import com.huashui.dormitory.domain.dto.BuildingUpdateDTO;
-import com.huashui.dormitory.domain.pojo.DormBuilding;
-import com.huashui.dormitory.domain.pojo.DormBuildingConfig;
-import com.huashui.dormitory.domain.pojo.DormRoom;
+import com.huashui.dormitory.domain.pojo.*;
 import com.huashui.dormitory.domain.vo.BuildingDetailVO;
 import com.huashui.dormitory.domain.vo.BuildingPageVO;
-import com.huashui.dormitory.mapper.DormBuildingConfigMapper;
-import com.huashui.dormitory.mapper.DormBuildingMapper;
-import com.huashui.dormitory.mapper.DormRoomMapper;
+import com.huashui.dormitory.mapper.*;
 import com.huashui.dormitory.service.DormBuildingService;
+import com.huashui.dormitory.service.SysCampusService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -39,7 +40,16 @@ import java.util.stream.Collectors;
 public class DormBuildingServiceImpl extends ServiceImpl<DormBuildingMapper, DormBuilding> implements DormBuildingService {
 
     private final DormBuildingConfigMapper configMapper;
+
     private final DormRoomMapper roomMapper;
+
+    private final DormRoomMapper dormRoomMapper;
+
+    private final DormBuildingManagerMapper dormBuildingManagerMapper;
+
+    private final UserClient userClient;
+
+    private final SysCampusService campusService;
 
 
     //新增楼栋
@@ -79,7 +89,7 @@ public class DormBuildingServiceImpl extends ServiceImpl<DormBuildingMapper, Dor
     @Override
     @Transactional
     public void deleteById(Long id) {
-        // todo 楼栋里含有未封闭的房间,
+
         if (roomMapper.selectCount(new LambdaQueryWrapper<DormRoom>().eq(DormRoom::getBuildingId, id)) > 0) {
             throw new BusinessException("该楼栋下存在使用中的房间，无法删除");
         }
@@ -129,6 +139,7 @@ public class DormBuildingServiceImpl extends ServiceImpl<DormBuildingMapper, Dor
                 .eq(dto.getCampusId() != null ,DormBuilding::getCampusId,dto.getCampusId())
                 .page(dto.toPage());
 
+        //属性copy
         List<BuildingPageVO> buildingPageVOList = BeanUtil.copyToList(page.getRecords(), BuildingPageVO.class);
 
 
@@ -154,17 +165,177 @@ public class DormBuildingServiceImpl extends ServiceImpl<DormBuildingMapper, Dor
                 .collect(Collectors.toMap(DormBuilding::getId, DormBuilding::getBuildingName));
     }
 
-    //todo
+    //填充未住满房间数量
     private void fillRoomInfo(List<BuildingPageVO> records) {
+
+        //空值校验
+        if (records == null || records.isEmpty()) {
+            return;
+        }
+
+        // 1. 获取当前分页中的所有楼栋 ID
+        List<Long> buildingIds = records.stream()
+                .map(BuildingPageVO::getId)
+                .toList();
+
+        // 2. 一次性统计所有楼栋的未住满房间数量
+        List<Map<String, Object>> roomCountList = dormRoomMapper.countAvailableRooms(buildingIds);
+
+        // 3. 转换成 Map<楼栋ID, 未住满房间数量>
+        Map<Long, Integer> roomCountMap = roomCountList.stream()
+                .collect(Collectors.toMap(item -> ((Number) item.get("buildingId")).longValue(),
+                        item -> ((Number) item.get("roomCount")).intValue()));
+
+        // 4. 回填
+        for (BuildingPageVO record : records) {
+            Long buildingId = record.getId();
+            if (roomCountMap.get(buildingId) != null){
+                //设置是否未住满
+                record.setHasVacancy(true);
+                //设置未住满房间数
+                record.setVacancyNum(roomCountMap.getOrDefault(buildingId, 0));
+            }
+
+        }
     }
 
-    //todo
+    //填充宿管姓名
     private void fillManagerName(List<BuildingPageVO> records) {
 
+        //null,校验
+        if (records == null || records.isEmpty()) {
+             return;
+        }
+
+        // 1. 获取楼栋ID
+        List<Long> buildingIds = records.stream()
+                .map(BuildingPageVO::getId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+
+        if (buildingIds.isEmpty()) {
+            return;
+        }
+
+        // 2. 根据楼栋ID查询宿舍管理员关系
+        List<DormBuildingManager> managers =
+                dormBuildingManagerMapper.selectList(
+                        new LambdaQueryWrapper<DormBuildingManager>()
+                                .in(DormBuildingManager::getBuildingId, buildingIds)
+                                .eq(DormBuildingManager::getStatus, 1));
+
+        if (managers.isEmpty()) {
+            return;
+        }
+
+        // 3. buildingId -> userId
+        Map<Long, Long> buildingManagerMap = managers.stream()
+                .collect(Collectors.toMap(
+                        DormBuildingManager::getBuildingId,
+                        DormBuildingManager::getUserId,
+                        (a, b) -> a
+                ));
+
+        // 4. 获取所有宿管用户ID
+        List<Long> userIds = managers.stream()
+                .map(DormBuildingManager::getUserId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+
+        if (userIds.isEmpty()) {
+            return;
+        }
+
+        // 5. 一次性调用 auth 微服务
+        List<UserSimpleInfo> userInfos = userClient.getUserInfoList(userIds);
+
+        // 6. userId -> 用户姓名
+        Map<Long, String> userNameMap = userInfos.stream()
+                .collect(Collectors.toMap(
+                        UserSimpleInfo::getId,
+                        UserSimpleInfo::getRealName, (a, b) -> a));
+
+        // 7. 填充宿管姓名
+        records.forEach(record -> {
+            Long userId = buildingManagerMap.get(record.getId());
+
+            if (userId != null) {
+                record.setManagerName(userNameMap.get(userId));
+            }
+        });
     }
 
-    //todo
+    //填充校区名称
     private void fillCampusName(List<BuildingPageVO> records) {
 
+        //null校验
+        if (records == null || records.isEmpty()) {
+            return;
+        }
+
+        // 1. 获取当前分页中的所有楼栋 ID
+        List<Long> buildingIds = records.stream()
+                .map(BuildingPageVO::getId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+
+        if (buildingIds.isEmpty()) {
+            return;
+        }
+
+        // 2. 根据楼栋 ID 批量查询楼栋信息
+        List<DormBuilding> buildings = listByIds(buildingIds);
+
+        if (CollectionUtils.isEmpty(buildings)) {
+            return;
+        }
+
+        // 3. 构建：楼栋 ID -> 校区 ID
+        Map<Long, Long> buildingCampusMap = buildings.stream()
+                .filter(building -> building.getCampusId() != null)
+                .collect(Collectors.toMap(
+                        DormBuilding::getId,
+                        DormBuilding::getCampusId,
+                        (oldValue, newValue) -> oldValue));
+
+        if (buildingCampusMap.isEmpty()) {
+            return;
+        }
+
+        // 4. 获取所有校区 ID
+        List<Long> campusIds = buildingCampusMap.values()
+                .stream()
+                .distinct()
+                .toList();
+
+        if (campusIds.isEmpty()) {
+            return;
+        }
+
+        // 5. 根据校区 ID 批量查询校区
+        List<SysCampus> campuses = campusService.listByIds(campusIds);
+
+        if (CollectionUtils.isEmpty(campuses)) {
+            return;
+        }
+
+        // 6. 构建：校区 ID -> 校区名称
+        Map<Long, String> campusNameMap = campuses.stream()
+                .collect(Collectors.toMap(
+                        SysCampus::getId,
+                        SysCampus::getCampusName,
+                        (oldValue, newValue) -> oldValue));
+
+        // 7. 回填校区名称
+        records.forEach(record -> {
+            Long campusId = buildingCampusMap.get(record.getId());
+
+            if (campusId != null) {
+                record.setCampusName(campusNameMap.get(campusId));
+            }
+        });
     }
 }

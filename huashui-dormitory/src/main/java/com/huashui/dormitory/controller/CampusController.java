@@ -47,7 +47,7 @@ public class CampusController {
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "停用校区")
+    @Operation(summary = "删除校区")
     public Result<Void> delete(@PathVariable Long id) {
         campusService.deleteById(id);
         return Result.ok();

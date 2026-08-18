@@ -1,0 +1,19 @@
+<script setup lang="ts">
+import { onMounted, reactive, ref } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { taskApi } from '@/api'
+
+const rows=ref<any[]>([]); const total=ref(0); const loading=ref(false)
+const query=reactive({pageNum:1,pageSize:10,name:'',campusId:'',buildingId:''})
+const dialogVisible=ref(false); const editId=ref<number|null>(null)
+const form=reactive({name:'',campusId:'',buildingId:'',enabled:1,items:''})
+
+async function load(){loading.value=true;try{const params={...query};Object.keys(params).forEach(k=>{if(params[k]===''||params[k]==null)delete params[k]});const raw:any=await taskApi.templatePage(params);const body=raw?.data??raw;rows.value=body?.records??[];total.value=Number(body?.total??rows.value.length)}finally{loading.value=false}}
+function openCreate(){editId.value=null;Object.assign(form,{name:'',campusId:'',buildingId:'',enabled:1,items:''});dialogVisible.value=true}
+function openEdit(row:any){editId.value=row.id;Object.assign(form,{name:row.name,campusId:row.campusId,buildingId:row.buildingId,enabled:row.enabled,items:JSON.stringify(row.items||[])});dialogVisible.value=true}
+async function submit(){try{const items=JSON.parse(form.items||'[]');if(editId.value===null)await taskApi.createTemplate({...form,items});else await taskApi.updateTemplate({...form,id:editId.value,items});ElMessage.success('保存成功');dialogVisible.value=false;load()}catch{ElMessage.warning('items 需为 JSON 数组')}}
+async function remove(row:any){await ElMessageBox.confirm('确定删除该模板吗？','提示',{type:'warning'});try{await taskApi.deleteTemplate(row.id);ElMessage.success('删除成功');load()}catch{}}
+onMounted(load)
+</script>
+<template><section class="hs-page"><div class="hs-page-title"><div class="cn">任务模板</div><div class="en">Task Templates</div><div class="hs-waterline"></div></div><div class="hs-panel"><el-form inline @submit.prevent><el-form-item label="名称"><el-input v-model="query.name" clearable style="width:150px"/></el-form-item><el-button type="primary" @click="load">查询</el-button><el-button type="primary" plain @click="openCreate">新增模板</el-button></el-form><el-table :data="rows" border stripe v-loading="loading"><el-table-column prop="id" label="ID" width="70"/><el-table-column prop="name" label="名称"/><el-table-column prop="campusName" label="校区"/><el-table-column prop="buildingName" label="楼栋"/><el-table-column prop="workerCount" label="工人数"/><el-table-column prop="enabled" label="启用"><template #default="{ row }">{{ row.enabled===1?'是':'否' }}</template></el-table-column><el-table-column label="操作" width="140" fixed="right"><template #default="{ row }"><el-button link type="primary" @click="openEdit(row)">编辑</el-button><el-button link type="danger" @click="remove(row)">删除</el-button></template></el-table-column></el-table><div class="pager"><el-pagination v-model:current-page="query.pageNum" v-model:page-size="query.pageSize" :total="total" layout="total, prev, pager, next" @current-change="load"/></div></div><el-dialog v-model="dialogVisible" :title="editId===null?'新增模板':'编辑模板'" width="600px"><el-form :model="form" label-width="90px"><el-form-item label="名称"><el-input v-model="form.name"/></el-form-item><el-form-item label="校区ID"><el-input v-model="form.campusId"/></el-form-item><el-form-item label="楼栋ID"><el-input v-model="form.buildingId"/></el-form-item><el-form-item label="启用"><el-switch v-model="form.enabled" :active-value="1" :inactive-value="0"/></el-form-item><el-form-item label="任务项JSON"><el-input v-model="form.items" type="textarea" :rows="8" placeholder='[{"workerId":1,"workerName":"张三","areaDesc":"1-3层","taskContent":"清扫走廊","deadline":"2026-08-19T18:00:00"}]'/></el-form-item></el-form><template #footer><el-button @click="dialogVisible=false">取消</el-button><el-button type="primary" @click="submit">保存</el-button></template></el-dialog></section></template>
+<style scoped>.pager{display:flex;justify-content:flex-end;margin-top:16px}</style>

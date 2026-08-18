@@ -8,11 +8,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 @FeignClient("huashui-system")
 public interface SystemClient {
 
-
-    /**
-     * 获取系统配置
-     */
-    @GetMapping("/system/config/value")
+    @GetMapping("/system/inner/config/value")
     Result<String> getConfigValue(@RequestParam("key") String key);
-
 }

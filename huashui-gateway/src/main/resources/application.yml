@@ -6,7 +6,6 @@ spring:
     name: huashui-gateway
 
   main:
-    # 允许 common 模块的 RedisConfig 覆盖 Boot 自动配置的 redisTemplate
     allow-bean-definition-overriding: true
     web-application-type: reactive
 
@@ -16,8 +15,6 @@ spring:
       - nacos:shared-springdoc.yml?group=DEFAULT_GROUP&refresh-enabled=true
       - nacos:shared-redis.yml?group=DEFAULT_GROUP&refresh-enabled=true
       - nacos:shared-token.yml?group=DEFAULT_GROUP&refresh-enabled=true
-
-
 
   cloud:
     nacos:
@@ -34,7 +31,6 @@ spring:
     gateway:
       discovery:
         locator:
-          # 启用 Nacos 服务发现自动路由（兜底）
           enabled: true
           lower-case-service-id: true
       routes:
@@ -46,8 +42,9 @@ spring:
           filters:
             - StripPrefix=0
 
-        - id: huashui-user
-          uri: lb://huashui-user
+        # /user/** 实际由 huashui-auth 的 /user/inner/** 提供，原 huashui-user 服务不存在
+        - id: huashui-user-inner
+          uri: lb://huashui-auth
           predicates:
             - Path=/user/**
           filters:
@@ -57,6 +54,13 @@ spring:
           uri: lb://huashui-system
           predicates:
             - Path=/system/**
+          filters:
+            - StripPrefix=0
+
+        - id: huashui-dict
+          uri: lb://huashui-system
+          predicates:
+            - Path=/dict/**
           filters:
             - StripPrefix=0
 
@@ -75,8 +79,9 @@ spring:
           filters:
             - StripPrefix=0
 
+        # 报修接口实际由 huashui-task 提供，原 huashui-repair 服务不存在
         - id: huashui-repair
-          uri: lb://huashui-repair
+          uri: lb://huashui-task
           predicates:
             - Path=/repair/**
           filters:
@@ -104,6 +109,14 @@ spring:
           filters:
             - StripPrefix=0
 
+        # 考勤管理端路径为 /admin/attendance/**
+        - id: huashui-attendance-admin
+          uri: lb://huashui-attendance-service
+          predicates:
+            - Path=/admin/attendance/**
+          filters:
+            - StripPrefix=0
+
         - id: huashui-leave-service
           uri: lb://huashui-leave-service
           predicates:
@@ -119,33 +132,17 @@ spring:
             - StripPrefix=0
 
         # ==================== 消息模块 ====================
-        - id: huashui-message-announcement
-          uri: lb://huashui-message-announcement
-          predicates:
-            - Path=/announcement/**
-          filters:
-            - StripPrefix=0
-
-        - id: huashui-message-notification
+        # 控制器实际路径为 /notice/** 和 /message/**，服务名为 huashui-message-notification
+        - id: huashui-notice
           uri: lb://huashui-message-notification
           predicates:
-            - Path=/notification/**
+            - Path=/notice/**
           filters:
             - StripPrefix=0
 
-        - id: huashui-message-template
-          uri: lb://huashui-message-template
+        - id: huashui-message
+          uri: lb://huashui-message-notification
           predicates:
-            - Path=/template/**
+            - Path=/message/**
           filters:
             - StripPrefix=0
-
-        # ==================== 任务调度 ====================
-        - id: huashui-job
-          uri: lb://huashui-job
-          predicates:
-            - Path=/job/**
-          filters:
-            - StripPrefix=0
-
-
