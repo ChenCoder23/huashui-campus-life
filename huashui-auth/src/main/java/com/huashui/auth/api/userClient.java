@@ -1,5 +1,6 @@
 package com.huashui.auth.api;
 
+import com.alibaba.druid.sql.visitor.functions.Char;
 import com.huashui.api.domain.vo.task.CleanerSimpleVO;
 import com.huashui.auth.service.SysUserService;
 import com.huashui.common.domain.dto.UserSimpleInfo;
@@ -9,7 +10,7 @@ import com.huashui.common.response.Result;
 import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.util.*;
 
 @RestController
 @RequestMapping("/user/inner")
@@ -51,7 +52,7 @@ public class userClient {
 
         return userService.getUserInfoById(id);
 
-    }
 
+    }
 
 }

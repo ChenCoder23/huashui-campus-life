@@ -66,6 +66,12 @@ public class DormBuildingServiceImpl extends ServiceImpl<DormBuildingMapper, Dor
         if (count != null && count != 0){
             throw new BusinessException("添加失败该楼栋已存在");
         }
+        // 空字符串直接传给 Hutool 转枚举会抛 ConvertException，这里统一转为 null，允许硬件配置不填。
+        if (StrUtil.isBlank(dto.getBathType())) dto.setBathType(null);
+        if (StrUtil.isBlank(dto.getBalconyType())) dto.setBalconyType(null);
+        if (StrUtil.isBlank(dto.getHotWaterType())) dto.setHotWaterType(null);
+        if (StrUtil.isBlank(dto.getRoomType())) dto.setRoomType("FOUR");
+
         DormBuilding building = BeanUtil.copyProperties(dto, DormBuilding.class);
         building.setStatus(Status.ENABLED);
         save(building);

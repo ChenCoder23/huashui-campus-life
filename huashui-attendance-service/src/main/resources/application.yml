@@ -9,6 +9,7 @@ spring:
     import:
       - nacos:shared-mysql.yml?group=DEFAULT_GROUP&refresh-enabled=true
       - nacos:shared-springdoc.yml?group=DEFAULT_GROUP&refresh-enabled=true
+      - nacos:shared-reids.yml?group=DEFAULT_GROUP&refresh-enabled=true
 
   cloud:
     nacos:
@@ -21,3 +22,24 @@ spring:
 
       config:
         refresh-enabled: true
+
+
+xxl:
+  job:
+    admin:
+      addresses: http://172.25.118.113:8200/xxl-job-admin
+    accessToken: huashuiNB666
+
+
+    executor:
+      appname: huashui-attendance-service
+      port: 9999
+
+hs:
+  jdbc:
+    db: huashui_attendance
+
+#设置日志级别
+logging:
+  level:
+    com.huashui.auth.mapper: debug

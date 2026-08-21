@@ -9,6 +9,8 @@ const menus = ref<any[]>([])
 const passwordForm = reactive({ account: '', oldPassword: '', newPassword: '', confirmPassword: '', captchaKey: '', captchaCode: '' })
 const emailForm = reactive({ email: '', code: '' })
 const uploading = ref(false)
+const captchaImage = ref('')
+const captchaLoading = ref(false)
 
 const avatarUrl = computed(() => auth.profile?.avatar || '')
 const avatarText = computed(() => (auth.profile?.realName || auth.profile?.username || '华').slice(0, 1))
@@ -18,14 +20,31 @@ async function load() {
   menus.value = res.data || []
 }
 
+async function loadPasswordCaptcha() {
+  captchaLoading.value = true
+  try {
+    const res: any = await authApi.captcha()
+    captchaImage.value = res?.data?.captchaImage || ''
+    passwordForm.captchaKey = res?.data?.captchaKey || ''
+    passwordForm.captchaCode = ''
+  } finally {
+    captchaLoading.value = false
+  }
+}
+
 async function changePassword() {
   if (passwordForm.newPassword !== passwordForm.confirmPassword) {
     ElMessage.warning('两次密码不一致')
     return
   }
+  if (!passwordForm.captchaCode) {
+    ElMessage.warning('请输入图形验证码')
+    return
+  }
   try {
     await authApi.updatePassword(passwordForm)
     ElMessage.success('密码已更新')
+    await loadPasswordCaptcha()
   } catch {}
 }
 
@@ -56,7 +75,10 @@ async function uploadAvatar(options: any) {
   }
 }
 
-onMounted(load)
+onMounted(() => {
+  load()
+  loadPasswordCaptcha()
+})
 </script>
 
 <template>
@@ -88,7 +110,13 @@ onMounted(load)
             <el-form-item label="原密码"><el-input v-model="passwordForm.oldPassword" type="password" show-password /></el-form-item>
             <el-form-item label="新密码"><el-input v-model="passwordForm.newPassword" type="password" show-password /></el-form-item>
             <el-form-item label="确认密码"><el-input v-model="passwordForm.confirmPassword" type="password" show-password /></el-form-item>
-            <el-form-item label="验证码"><el-input v-model="passwordForm.captchaCode" /></el-form-item>
+            <el-form-item label="图形验证码">
+              <div class="captcha-row">
+                <el-input v-model="passwordForm.captchaCode" placeholder="请输入验证码" />
+                <img v-if="captchaImage" :src="captchaImage" class="captcha" title="点击刷新" @click="loadPasswordCaptcha" />
+                <el-button v-else :loading="captchaLoading" @click="loadPasswordCaptcha">获取验证码</el-button>
+              </div>
+            </el-form-item>
             <el-button type="primary" @click="changePassword">保存</el-button>
           </el-form>
         </div>
@@ -133,6 +161,20 @@ onMounted(load)
   margin-top: 8px;
   color: var(--hs-muted);
   font-size: 12px;
+}
+.captcha-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+.captcha {
+  height: 40px;
+  width: 120px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid #dfe7eb;
+  cursor: pointer;
 }
 h3 { margin: 0 0 16px; color: var(--hs-deep); }
 </style>

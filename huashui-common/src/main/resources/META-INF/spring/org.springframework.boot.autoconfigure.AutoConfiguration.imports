@@ -5,3 +5,4 @@ com.huashui.common.config.UserContextAutoConfiguration
 com.huashui.common.config.RabbitConfig
 com.huashui.common.config.MPHandler
 
+

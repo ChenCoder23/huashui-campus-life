@@ -230,8 +230,7 @@ public class AttendanceRecordServiceImpl extends ServiceImpl<AttendanceRecordMap
 
         if(record == null){
             throw new BusinessException(
-                    "考勤记录不存在"
-            );
+                    "考勤记录不存在");
 
         }
 

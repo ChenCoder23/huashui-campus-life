@@ -108,7 +108,10 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 
     @Override
     public List<CleanerSimpleVO> listByRole(String role) {
-        return userMapper.selectCleanerByRole(role);
+        List<CleanerSimpleVO> cleanerSimpleVOS = userMapper.selectCleanerByRole(role);
+
+        log.info("cleanerSimpleVOS{}",cleanerSimpleVOS);
+        return cleanerSimpleVOS;
     }
 
     @Override

@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import java.util.Map;
 import java.util.Set;
 
-@FeignClient("huashui-dormitory")
+@FeignClient(name =  "huashui-dormitory", contextId = "BuildingClient")
 public interface BuildingClient {
 
     @GetMapping("/building/inner/batch-name")

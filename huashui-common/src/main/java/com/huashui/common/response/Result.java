@@ -1,6 +1,7 @@
 package com.huashui.common.response;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.util.List;
@@ -9,6 +10,7 @@ import java.util.List;
  * 统一响应体
  */
 @Data
+@NoArgsConstructor
 public class Result<T> implements Serializable {
 
     private int code;

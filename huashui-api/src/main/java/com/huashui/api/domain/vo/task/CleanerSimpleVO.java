@@ -13,7 +13,7 @@ public class CleanerSimpleVO {
     /**
      * 姓名
      */
-    private String name;
+    private String realName;
 
 
 }

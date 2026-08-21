@@ -1,6 +1,7 @@
 package com.huashui.dormitory.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -20,6 +21,7 @@ import com.huashui.dormitory.domain.pojo.DormBed;
 import com.huashui.dormitory.domain.pojo.DormBuilding;
 import com.huashui.dormitory.domain.pojo.DormRoom;
 import com.huashui.dormitory.mapper.DormBedMapper;
+import com.huashui.dormitory.mapper.DormBuildingMapper;
 import com.huashui.dormitory.mapper.DormRoomMapper;
 import com.huashui.dormitory.service.DormRoomService;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +29,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Slf4j
 @Service
@@ -36,6 +40,8 @@ public class DormRoomServiceImpl extends ServiceImpl<DormRoomMapper, DormRoom> i
     private final DormBedMapper bedMapper;
 
     private final DormRoomMapper roomMapper;
+
+    private final DormBuildingMapper buildingMapper;
 
     @Override
     @Transactional
@@ -119,6 +125,41 @@ public class DormRoomServiceImpl extends ServiceImpl<DormRoomMapper, DormRoom> i
 
     @Override
     public PageResult<DormRoom> getRoomPage(RoomPageDTO dto) {
+        LambdaQueryWrapper<DormRoom> wrapper = new LambdaQueryWrapper<>();
+
+        if (dto.getCampusId() != null) {
+            List<Long> buildingIds = buildingMapper.selectList(
+                            new LambdaQueryWrapper<DormBuilding>()
+                                    .eq(DormBuilding::getCampusId, dto.getCampusId()))
+                    .stream()
+                    .map(DormBuilding::getId)
+                    .toList();
+
+            if (buildingIds.isEmpty()) {
+                return PageResult.of(0, dto.getPageNum(), dto.getPageSize(), List.of());
+            }
+            wrapper.in(DormRoom::getBuildingId, buildingIds);
+        }
+
+        wrapper.eq(dto.getBuildingId() != null, DormRoom::getBuildingId, dto.getBuildingId())
+                .eq(dto.getFloorNumber() != null, DormRoom::getFloorNumber, dto.getFloorNumber())
+                .like(StrUtil.isNotBlank(dto.getRoomNumber()), DormRoom::getRoomNumber, dto.getRoomNumber())
+                .eq(StrUtil.isNotBlank(dto.getStatus()), DormRoom::getStatus, parseRoomStatus(dto.getStatus()))
+                .orderByAsc(DormRoom::getBuildingId)
+                .orderByAsc(DormRoom::getFloorNumber)
+                .orderByAsc(DormRoom::getRoomNumber);
+
+        Page<DormRoom> page = page(dto.toPage(), wrapper);
+        return PageResult.of(page.getTotal(), page.getPages(), page.getSize(), page.getRecords());
+    }
+
+    private RoomStatus parseRoomStatus(String status) {
+        if (StrUtil.isBlank(status)) return null;
+        for (RoomStatus item : RoomStatus.values()) {
+            if (item.name().equalsIgnoreCase(status) || item.getCode().equalsIgnoreCase(status)) {
+                return item;
+            }
+        }
         return null;
     }
 

@@ -5,6 +5,13 @@ import { ElMessage } from 'element-plus'
 import { authApi } from '@/api'
 import { useAuthStore } from '@/store/auth'
 
+import carousel1 from '@/assets/login-carousel/1552382688_2217_thumb.jpg'
+import carousel2 from '@/assets/login-carousel/1552382688_5438_thumb.jpg'
+import carousel3 from '@/assets/login-carousel/1552382688_7673_thumb.jpg'
+import carousel4 from '@/assets/login-carousel/15c1b3164f69432582e1e90ad4333f4e.jpeg'
+import carousel5 from '@/assets/login-carousel/3934b471879440a2b71f38bba902d14a.jpeg'
+import carousel6 from '@/assets/login-carousel/e439ba2ccce84c9495720471487d96ab.jpeg'
+
 const router = useRouter()
 const route = useRoute()
 const auth = useAuthStore()
@@ -15,6 +22,8 @@ const loading = ref(false)
 const accountForm = reactive({ account: '', password: '', captchaCode: '' })
 const emailForm = reactive({ email: '', code: '' })
 const sending = ref(false)
+
+const carouselImages = [carousel1, carousel2, carousel3, carousel4, carousel5, carousel6]
 
 async function loadCaptcha() {
   const res: any = await authApi.captcha()
@@ -73,9 +82,15 @@ onMounted(loadCaptcha)
 
 <template>
   <div class="login-page">
+    <el-carousel class="login-carousel" height="100%" :interval="3000" arrow="never" indicator-position="none">
+      <el-carousel-item v-for="img in carouselImages" :key="img">
+        <img :src="img" class="carousel-image" alt="校园风景" />
+      </el-carousel-item>
+    </el-carousel>
+
+
     <div class="login-card hs-panel">
       <div class="brand-line">
-<!--        <div class="brand-mark">HS</div>-->
         <div>
           <h1>校园生活服务平台</h1>
           <p>HUASHUI CAMPUS LIFE</p>
@@ -124,15 +139,30 @@ onMounted(loadCaptcha)
 
 <style scoped>
 .login-page {
+  position: relative;
   min-height: 100vh;
   display: grid;
   place-items: center;
   padding: 24px;
-  background:
-    linear-gradient(135deg, rgba(11,60,93,.95), rgba(29,106,150,.75)),
-    radial-gradient(circle at 80% 20%, rgba(232,213,183,.35), transparent 28rem);
+  overflow: hidden;
+  background: linear-gradient(135deg, rgba(11, 60, 93, 0.95), rgba(29, 106, 150, 0.75));
+}
+.login-carousel {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+.carousel-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 .login-card {
+  position: relative;
+  z-index: 2;
   width: min(420px, 100%);
   padding: 34px;
 }
@@ -141,16 +171,6 @@ onMounted(loadCaptcha)
   align-items: center;
   gap: 14px;
   margin-bottom: 24px;
-}
-.brand-mark {
-  width: 52px;
-  height: 52px;
-  border-radius: 14px;
-  display: grid;
-  place-items: center;
-  font-weight: 900;
-  color: #0b3c5d;
-  background: linear-gradient(135deg, #e8d5b7, #c85c40);
 }
 h1 {
   margin: 0;

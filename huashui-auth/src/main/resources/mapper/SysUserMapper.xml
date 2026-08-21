@@ -20,7 +20,7 @@
                  LEFT JOIN sys_role r
                            ON ur.role_id = r.id
 
-        WHERE r.code = #{role}
+        WHERE r.role_code = #{role}
 
     </select>
 </mapper>

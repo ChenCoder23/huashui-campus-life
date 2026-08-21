@@ -1,25 +1,34 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessageBox } from 'element-plus'
 import { useAuthStore } from '@/store/auth'
-import { authApi } from '@/api'
+import { authApi, messageApi } from '@/api'
+
+interface MenuNode {
+  index?: string
+  label: string
+  icon?: string
+  roles?: string[]
+  children?: MenuNode[]
+}
 
 const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
+const unreadCount = ref(0)
 
-const menus = [
+const allMenus: MenuNode[] = [
   { index: '/dashboard', label: '总览', icon: 'DataLine' },
   {
     label: '认证权限', icon: 'Lock', children: [
-      { index: '/auth/menus', label: '菜单管理' },
-      { index: '/auth/roles', label: '角色管理' },
+      { index: '/auth/menus', label: '菜单管理', roles: ['SUPER_ADMIN'] },
+      { index: '/auth/roles', label: '角色管理', roles: ['SUPER_ADMIN'] },
       { index: '/profile', label: '个人中心' }
     ]
   },
   {
-    label: '系统管理', icon: 'Setting', children: [
+    label: '系统管理', icon: 'Setting', roles: ['SUPER_ADMIN'], children: [
       { index: '/system/dict-type', label: '字典类型' },
       { index: '/system/dict-data', label: '字典数据' },
       { index: '/system/config', label: '参数配置' },
@@ -30,15 +39,15 @@ const menus = [
   },
   {
     label: '宿舍管理', icon: 'OfficeBuilding', children: [
-      { index: '/dormitory/campus', label: '校区管理' },
-      { index: '/dormitory/building', label: '楼栋管理' },
-      { index: '/dormitory/room', label: '房间管理' },
-      { index: '/dormitory/record', label: '住宿记录' },
-      { index: '/dormitory/my', label: '我的宿舍' }
+      { index: '/dormitory/campus', label: '校区管理', roles: ['SUPER_ADMIN', 'DORM_MANAGER'] },
+      { index: '/dormitory/building', label: '楼栋管理', roles: ['SUPER_ADMIN', 'DORM_MANAGER'] },
+      { index: '/dormitory/room', label: '房间管理', roles: ['SUPER_ADMIN', 'DORM_MANAGER'] },
+      { index: '/dormitory/record', label: '住宿记录', roles: ['SUPER_ADMIN', 'DORM_MANAGER'] },
+      { index: '/dormitory/my', label: '我的宿舍', roles: ['STUDENT'] }
     ]
   },
   {
-    label: '生活服务', icon: 'Coin', children: [
+    label: '生活服务', icon: 'Coin', roles: ['SUPER_ADMIN', 'DORM_MANAGER', 'STUDENT'], children: [
       { index: '/utility/water', label: '水费余额' },
       { index: '/utility/electric', label: '电费余额' },
       { index: '/utility/payment', label: '缴费记录' }
@@ -46,40 +55,67 @@ const menus = [
   },
   {
     label: '考勤请假', icon: 'Calendar', children: [
-      { index: '/attendance/my', label: '我的考勤' },
-      { index: '/attendance/admin', label: '考勤管理' },
+      { index: '/attendance/my', label: '我的考勤', roles: ['CLEANER', 'REPAIRER', 'DORM_MANAGER', 'SUPER_ADMIN'] },
+      { index: '/attendance/admin', label: '考勤管理', roles: ['SUPER_ADMIN', 'DORM_MANAGER'] },
       { index: '/leave', label: '请假管理' }
     ]
   },
   {
     label: '维修与保洁', icon: 'Tools', children: [
-      { index: '/repair/my', label: '我的报修' },
-      { index: '/repair/admin', label: '报修管理' },
-      { index: '/repair/worker', label: '我的维修' },
-      { index: '/task/list', label: '保洁任务' },
-      { index: '/task/template', label: '任务模板' }
+      { index: '/repair/my', label: '我的报修', roles: ['STUDENT'] },
+      { index: '/repair/admin', label: '报修管理', roles: ['SUPER_ADMIN', 'DORM_MANAGER'] },
+      { index: '/repair/worker', label: '我的维修', roles: ['REPAIRER'] },
+      { index: '/task/list', label: '保洁任务', roles: ['SUPER_ADMIN', 'DORM_MANAGER', 'CLEANER'] },
+      { index: '/task/template', label: '任务模板', roles: ['SUPER_ADMIN', 'DORM_MANAGER'] }
     ]
   },
   {
     label: '评价问卷', icon: 'EditPen', children: [
-      { index: '/evaluation/questionnaire', label: '问卷管理' },
-      { index: '/evaluation/my', label: '待我评价' },
-      { index: '/evaluation/statistics', label: '评价统计' }
+      { index: '/evaluation/questionnaire', label: '问卷管理', roles: ['SUPER_ADMIN', 'DORM_MANAGER'] },
+      { index: '/evaluation/my', label: '待我评价', roles: ['STUDENT'] },
+      { index: '/evaluation/statistics', label: '评价统计', roles: ['SUPER_ADMIN', 'DORM_MANAGER'] }
     ]
   },
   {
     label: '消息公告', icon: 'Bell', children: [
-      { index: '/notice/admin', label: '公告管理' },
+      { index: '/notice/admin', label: '公告管理', roles: ['SUPER_ADMIN', 'DORM_MANAGER'] },
       { index: '/notice/center', label: '通知中心' },
       { index: '/message/inbox', label: '我的消息' }
     ]
   }
 ]
 
+const currentRole = computed(() => auth.profile?.userType || 'STUDENT')
+
+function filterMenus(nodes: MenuNode[]): MenuNode[] {
+  const result: MenuNode[] = []
+  for (const node of nodes) {
+    if (node.roles && !node.roles.includes(currentRole.value)) continue
+    const children = node.children ? filterMenus(node.children) : []
+    if (node.children && children.length === 0) continue
+    result.push({ ...node, children: node.children ? children : undefined })
+  }
+  return result
+}
+
+const menus = computed(() => filterMenus(allMenus))
 const activeIndex = computed(() => route.path)
 const displayName = computed(() => auth.profile?.realName || auth.profile?.username || '华水用户')
 const avatarUrl = computed(() => auth.profile?.avatar || '')
 const avatarText = computed(() => (displayName.value || '华').slice(0, 1))
+
+async function loadUnread() {
+  try {
+    const res: any = await messageApi.unreadCount()
+    unreadCount.value = Number(res?.data ?? 0)
+  } catch {
+    unreadCount.value = 0
+  }
+}
+
+function goInbox() {
+  router.push('/message/inbox')
+}
 
 async function logout() {
   await ElMessageBox.confirm('确定退出登录吗？', '提示', { type: 'warning' })
@@ -87,6 +123,8 @@ async function logout() {
   auth.logout()
   router.replace('/login')
 }
+
+onMounted(loadUnread)
 </script>
 
 <template>
@@ -122,6 +160,9 @@ async function logout() {
       <el-header class="header">
         <div class="header-title">{{ route.meta.title || '华水校园生活' }}</div>
         <div class="header-right">
+          <el-badge :value="unreadCount" :hidden="unreadCount === 0" class="inbox-badge">
+            <el-button circle :icon="'Bell'" title="收件箱" @click="goInbox" />
+          </el-badge>
           <el-avatar :size="32" :src="avatarUrl" class="user-avatar">{{ avatarText }}</el-avatar>
           <span class="user-name">{{ displayName }}</span>
           <el-button link type="danger" @click="logout">退出</el-button>
@@ -199,6 +240,9 @@ async function logout() {
   display: flex;
   align-items: center;
   gap: 12px;
+}
+.inbox-badge {
+  margin-right: 4px;
 }
 .user-avatar {
   background: linear-gradient(135deg, #e8d5b7, #c85c40);

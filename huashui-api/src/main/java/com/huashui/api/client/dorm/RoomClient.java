@@ -6,7 +6,7 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
-@FeignClient("huashui-dormitory")
+@FeignClient(name = "huashui-dormitory", contextId = "RoomClient")
 public interface RoomClient {
 
     @GetMapping("/room/info/{id}")

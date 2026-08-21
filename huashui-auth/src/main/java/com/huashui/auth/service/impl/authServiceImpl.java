@@ -208,7 +208,7 @@ public class authServiceImpl implements authService {
         if(!isAdmin){
             checkRedisCode(
                     dto.getCaptchaCode(),
-                    dto.getCaptchaKey()
+                    RedisConstants.CAPTCHA_PREFIX + dto.getCaptchaKey()
             );
 
             //3. 校验旧密码

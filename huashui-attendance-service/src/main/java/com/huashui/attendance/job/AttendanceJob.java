@@ -46,17 +46,18 @@ public class AttendanceJob {
      */
     @XxlJob("attendanceGenerateJob")
     public void generateAttendance(){
-        log.info("开始生成每日保洁考勤记录");
+        log.info(">>>>>>>>>>开始生成每日保洁考勤记录");
         LocalDate today = LocalDate.now();
         //1. 判断今天是否节假日
-        boolean holiday = checkHoliday(today);
+       /* boolean holiday = checkHoliday(today);
         if(holiday){
             log.info("{} 是节假日，跳过自动生成考勤", today);
             return;
         }
-
+*/
         //2. 查询所有保洁员
         List<CleanerSimpleVO> cleaners = getCleaners();
+        log.info("cleaners{}",cleaners);
 
         if(CollUtil.isEmpty(cleaners)){
             log.info("暂无保洁员");
@@ -80,7 +81,7 @@ public class AttendanceJob {
                     AttendanceRecord record = new AttendanceRecord();
 
                     record.setWorkerId(cleaner.getId());
-                    record.setWorkerName(cleaner.getName());
+                    record.setWorkerName(cleaner.getRealName());
 
                     record.setAttendanceDate(today);
 
@@ -93,6 +94,8 @@ public class AttendanceJob {
 
                 })
                 .toList();
+
+        log.info("4. 准备生成考勤记录：{}", records);
 
 
         // 4. 批量保存
@@ -163,10 +166,19 @@ public class AttendanceJob {
      *
      * 通过Feign调用user模块
      */
-    private List<CleanerSimpleVO> getCleaners(){
-        Result<List<CleanerSimpleVO>> result = userClient.listByRole("CLEANER");
-        return result.getData();
+    private List<CleanerSimpleVO> getCleaners() {
+        try {
+            log.info(" 开始调用 userClient.listByRole ");
+            Result<List<CleanerSimpleVO>> result =
+                    userClient.listByRole("CLEANER");
+            log.info(" Feign调用完成 ");
+            log.info("result = {}", result);
+            return result.getData();
+        } catch (Exception e) {
+            log.error(" Feign调用异常", e);
+            throw e;
         }
+    }
 
 
 

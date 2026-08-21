@@ -1,5 +1,6 @@
 package com.huashui.dormitory.domain.dto;
 
+import com.huashui.common.enums.Status;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
@@ -21,4 +22,7 @@ public class CampusDTO {
 
     @Schema(description = "排序序号")
     private Integer sortOrder;
+
+    @Schema(description = "状态（ENABLED/DISABLED）")
+    private Status status;
 }
