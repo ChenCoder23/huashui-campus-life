@@ -124,7 +124,7 @@ huashui-ui/dist/
 示例：
 
 ```bat
-ssh -L 3308:localhost:3306 -L 18848:localhost:8848 -L 19848:localhost:9848 -L 18080:localhost:8080 ubuntu@43.143.130.165 -N
+ssh -L 3308:localhost:3306 -L 18848:localhost:8848 -L 19848:localhost:9848 -L 18080:localhost:8080 ubuntu@<云服务器地址> -N
 ```
 
 > 具体隧道端口请以当前服务器配置和 `启动华水隧道.bat` 为准。
@@ -176,7 +176,7 @@ mvn -pl huashui-gateway,huashui-auth,huashui-dormitory -am -DskipTests compile
 |------|-----|
 | 地址 | `127.0.0.1:18848` |
 | 用户名 | `nacos` |
-| 密码 | `Chc23pray`（以实际配置为准） |
+| 密码 | 请从 Nacos 配置或管理员处获取 |
 
 ### MySQL
 
@@ -184,16 +184,16 @@ mvn -pl huashui-gateway,huashui-auth,huashui-dormitory -am -DskipTests compile
 |------|-----|
 | 云 MySQL | `127.0.0.1:3308` |
 | 本地 MySQL | `127.0.0.1:3309` |
-| 用户名 | `huashuiNB666` |
-| 密码 | `huashuiNB666pw` |
+| 用户名 | 请从项目安全配置或管理员处获取 |
+| 密码 | 请从项目安全配置或管理员处获取 |
 
 ### 中间件
 
 | 服务 | 地址 | 用户名 | 密码 |
 |------|------|--------|------|
 | Redis | `localhost:6379` | — | 无密码 |
-| RabbitMQ | `localhost:15672` | `huashuiNB666` | `huashuiNB666pw` |
-| MinIO | `localhost:9001` | `huashuiNB666` | `huashuiNB666pw` |
+| RabbitMQ | `localhost:15672` | 请使用项目配置中的账号 | 请从安全配置获取 |
+| MinIO | `localhost:9001` | 请使用项目配置中的账号 | 请从安全配置获取 |
 | XXL-JOB | `localhost:8200/xxl-job-admin` | `admin` | `123456` |
 
 ---
