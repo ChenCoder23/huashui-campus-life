@@ -1,12 +1,16 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { attendanceApi, dormitoryApi, messageApi } from '@/api'
+import { useAuthStore } from '@/store/auth'
 import campusBanner from '@/assets/login-carousel/1552382688_5438_thumb.jpg'
 
+const auth = useAuthStore()
 const stats = ref<any>(null)
 const myDorm = ref<any>(null)
 const notices = ref<any[]>([])
 const loading = ref(false)
+
+const isSuperAdmin = computed(() => auth.profile?.userType === 'SUPER_ADMIN')
 
 async function load() {
   loading.value = true
@@ -58,7 +62,7 @@ onMounted(load)
     </el-row>
 
     <el-row :gutter="16" style="margin-top: 16px">
-      <el-col :span="12">
+      <el-col v-if="!isSuperAdmin" :span="12">
         <div class="hs-panel">
           <h3>我的宿舍</h3>
           <el-descriptions v-if="myDorm" :column="2" border>
@@ -70,17 +74,20 @@ onMounted(load)
           <el-empty v-else description="暂无宿舍信息" :image-size="70" />
         </div>
       </el-col>
-      <el-col :span="12">
-        <div class="hs-panel">
-          <h3>最新通知</h3>
-          <div v-if="notices.length" class="notice-list">
-            <div v-for="notice in notices" :key="notice.id" class="notice-item">
-              <span class="dot"></span>
-              <span>{{ notice.title }}</span>
-              <span class="time">{{ notice.publishTime?.replace('T', ' ').slice(0, 16) }}</span>
-            </div>
-          </div>
-          <el-empty v-else description="暂无通知" :image-size="70" />
+
+      <el-col :span="isSuperAdmin ? 24 : 12">
+        <div class="hs-panel notice-panel">
+          <h3>学校最新公告</h3>
+          <el-carousel v-if="notices.length" height="210px" trigger="click" :interval="5000" arrow="hover" indicator-position="outside">
+            <el-carousel-item v-for="notice in notices" :key="notice.id">
+              <div class="notice-slide">
+                <div class="notice-title">{{ notice.title }}</div>
+                <div class="notice-summary">{{ notice.summary || notice.content || '暂无内容' }}</div>
+                <div class="notice-time">{{ notice.publishTime?.replace('T', ' ').slice(0, 16) }}</div>
+              </div>
+            </el-carousel-item>
+          </el-carousel>
+          <el-empty v-else description="暂无公告" :image-size="70" />
         </div>
       </el-col>
     </el-row>
@@ -130,21 +137,33 @@ h3 {
   color: var(--hs-deep);
   font-size: 16px;
 }
-.notice-item {
+.notice-panel :deep(.el-carousel__item) {
+  background: linear-gradient(135deg, rgba(29, 106, 150, 0.06), rgba(232, 213, 183, 0.18));
+  border-radius: 10px;
+}
+.notice-slide {
+  height: 100%;
+  padding: 22px 26px;
   display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 0;
-  border-bottom: 1px dashed #e4e8ea;
+  flex-direction: column;
+  justify-content: center;
 }
-.dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--hs-clay);
+.notice-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--hs-deep);
+  margin-bottom: 12px;
 }
-.time {
-  margin-left: auto;
+.notice-summary {
+  color: var(--hs-ink);
+  line-height: 1.6;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.notice-time {
+  margin-top: 10px;
   color: var(--hs-muted);
   font-size: 12px;
 }
