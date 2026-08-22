@@ -18,6 +18,7 @@ const router = createRouter({
         { path: 'system/dict-type', component: () => import('@/views/system/DictType.vue'), meta: { title: '字典类型' } },
         { path: 'system/dict-data', component: () => import('@/views/system/DictData.vue'), meta: { title: '字典数据' } },
         { path: 'system/config', component: () => import('@/views/system/Config.vue'), meta: { title: '参数配置' } },
+        { path: 'system/files', component: () => import('@/views/system/FileCenter.vue'), meta: { title: '文件中心' } },
         { path: 'system/login-logs', component: () => import('@/views/system/LogTable.vue'), meta: { title: '登录日志', logType: 'login' } },
         { path: 'system/operation-logs', component: () => import('@/views/system/LogTable.vue'), meta: { title: '操作日志', logType: 'operation' } },
         { path: 'system/exception-logs', component: () => import('@/views/system/LogTable.vue'), meta: { title: '异常日志', logType: 'exception' } },

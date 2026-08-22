@@ -52,6 +52,7 @@ export const systemApi = {
 // 存储
 export const storageApi = {
   upload: (formData: FormData, type: string) => http.post(`/storage/upload`, formData, { params: { type }, headers: { 'Content-Type': 'multipart/form-data' } }),
+  page: (params: any) => http.get('/storage/page', { params }),
   files: (ids: string) => http.get('/storage/files', { params: { ids } }),
   remove: (id: number) => http.delete(`/storage/${id}`)
 }

@@ -18,7 +18,7 @@
 ## 一、快速开始
 
 ```bash
-git clone <你的仓库地址>
+git clone https://github.com/ChenCoder23/huashui-campus-life.git
 cd huashui-campus-life
 ```
 

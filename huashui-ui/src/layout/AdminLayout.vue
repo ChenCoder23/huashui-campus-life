@@ -33,6 +33,7 @@ const allMenus: MenuNode[] = [
       { index: '/system/dict-type', label: '字典类型' },
       { index: '/system/dict-data', label: '字典数据' },
       { index: '/system/config', label: '参数配置' },
+      { index: '/system/files', label: '文件中心' },
       { index: '/system/login-logs', label: '登录日志' },
       { index: '/system/operation-logs', label: '操作日志' },
       { index: '/system/exception-logs', label: '异常日志' }
@@ -56,7 +57,7 @@ const allMenus: MenuNode[] = [
   },
   {
     label: '考勤请假', icon: 'Calendar', children: [
-      { index: '/attendance/my', label: '我的考勤', roles: ['CLEANER', 'REPAIRER', 'DORM_MANAGER', 'SUPER_ADMIN'] },
+      { index: '/attendance/my', label: '我的考勤', roles: ['CLEANER', 'REPAIRER'] },
       { index: '/attendance/admin', label: '考勤管理', roles: ['SUPER_ADMIN', 'DORM_MANAGER'] },
       { index: '/leave', label: '请假管理' }
     ]
