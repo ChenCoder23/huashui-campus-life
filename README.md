@@ -10,9 +10,44 @@
 - 鉴权：Sa-Token
 - 中间件：MySQL、Redis、RabbitMQ、MinIO、XXL-JOB
 
+> 从 GitHub 克隆后快速本地部署请阅读：  
+> `华水校园生活平台说明文档/本地环境部署指南.md`
+
 ---
 
-## 一、项目结构
+## 一、快速开始
+
+```bash
+git clone <你的仓库地址>
+cd huashui-campus-life
+```
+
+1. 创建数据库和表：
+
+```bash
+mysql -u root -p < docs/sql/init-schema.sql
+```
+
+2. 自行创建数据库用户和密码，并配置到 Nacos / 后端配置中。
+3. 启动 Nacos、Redis、RabbitMQ、MySQL。
+4. 启动后端服务。
+5. 启动前端：
+
+```bash
+cd huashui-ui
+pnpm install
+pnpm dev
+```
+
+默认前端地址：
+
+```text
+http://127.0.0.1:4173/
+```
+
+---
+
+## 二、项目结构
 
 ```text
 huashui-campus-life/
@@ -30,13 +65,13 @@ huashui-campus-life/
 ├── huashui-api/                     # 内部 Feign API 契约
 ├── huashui-common/                  # 公共组件与工具
 ├── huashui-ui/                      # Vue 3 前端
-├── docs/                            # 接口测试清单等文档
+├── docs/                            # 接口测试清单、SQL 建表脚本
 └── 华水校园生活平台说明文档/         # 部署说明与 docker-compose
 ```
 
 ---
 
-## 二、服务模块
+## 三、服务模块
 
 | 模块 | 服务名 | 端口 | 业务库 | 主要功能 |
 |------|--------|------|--------|----------|
@@ -54,7 +89,7 @@ huashui-campus-life/
 
 ---
 
-## 三、前端项目
+## 四、前端项目
 
 前端位于 `huashui-ui/`。
 
@@ -82,8 +117,6 @@ pnpm dev
 http://127.0.0.1:4173/
 ```
 
-> 注意：当前项目将 Vite 端口配置为 `4173`，而不是常见的 `5173`。原因是 `5173` 可能被 Windows 端口排除范围占用，导致 `listen EACCES`。
-
 前端开发服务器会将 `/api` 代理到：
 
 ```text
@@ -105,44 +138,35 @@ huashui-ui/dist/
 
 ---
 
-## 四、后端启动
+## 五、后端启动
 
 ### 1. 前置依赖
 
 - JDK 17+
 - Maven 3.9+
-- 可用 Nacos
-- 可用 MySQL
-- 可用 Redis
-- 可用 RabbitMQ
+- Nacos
+- MySQL 8.0+
+- Redis
+- RabbitMQ
 - 可选 MinIO、XXL-JOB
 
-### 2. 启动云服务隧道
+### 2. 初始化数据库
 
-项目文档建议通过 SSH 隧道连接云 MySQL 与 Nacos。
+执行项目提供的建表脚本：
 
-示例：
-
-```bat
-ssh -L 3308:localhost:3306 -L 18848:localhost:8848 -L 19848:localhost:9848 -L 18080:localhost:8080 ubuntu@<云服务器地址> -N
+```bash
+mysql -u root -p < docs/sql/init-schema.sql
 ```
 
-> 具体隧道端口请以当前服务器配置和 `启动华水隧道.bat` 为准。
+该脚本只创建数据库和表，不创建用户、不设置密码。密码由部署者自行设置。
 
-### 3. 启动本地中间件
+### 3. 启动中间件
 
-可使用 `华水校园生活平台说明文档/docker-compose.yml` 启动 Redis、RabbitMQ、MinIO、XXL-JOB 等中间件。
+先启动 Nacos、MySQL、Redis、RabbitMQ，并按需启动 MinIO、XXL-JOB。
 
 ### 4. 启动后端服务
 
-推荐先启动注册中心，再启动网关和业务服务。
-
-#### 启动网关
-
-```bash
-cd huashui-gateway
-mvn spring-boot:run
-```
+推荐先启动认证服务和网关，再启动其他业务服务。
 
 #### 启动认证服务
 
@@ -151,9 +175,16 @@ cd huashui-auth
 mvn spring-boot:run
 ```
 
+#### 启动网关
+
+```bash
+cd huashui-gateway
+mvn spring-boot:run
+```
+
 #### 启动其他服务
 
-可按需启动，例如：
+例如：
 
 ```bash
 cd huashui-dormitory
@@ -168,37 +199,44 @@ mvn -pl huashui-gateway,huashui-auth,huashui-dormitory -am -DskipTests compile
 
 ---
 
-## 五、配置与账号
+## 六、配置
+
+所有密码由部署者自行设置，项目 README 不提供真实凭据。
 
 ### Nacos
 
-| 项目 | 值 |
-|------|-----|
-| 地址 | `127.0.0.1:18848` |
-| 用户名 | `nacos` |
-| 密码 | 请从 Nacos 配置或管理员处获取 |
+| 项目 | 说明 |
+|------|------|
+| 地址 | 以本机实际启动地址为准 |
+| 用户名 | 自行设置 |
+| 密码 | 自行设置 |
 
 ### MySQL
 
-| 项目 | 值 |
-|------|-----|
-| 云 MySQL | `127.0.0.1:3308` |
-| 本地 MySQL | `127.0.0.1:3309` |
-| 用户名 | 请从项目安全配置或管理员处获取 |
-| 密码 | 请从项目安全配置或管理员处获取 |
+| 项目 | 说明 |
+|------|------|
+| 数据库 | 由 `docs/sql/init-schema.sql` 创建 |
+| 用户名 | 自行创建 |
+| 密码 | 自行设置 |
 
 ### 中间件
 
-| 服务 | 地址 | 用户名 | 密码 |
-|------|------|--------|------|
-| Redis | `localhost:6379` | — | 无密码 |
-| RabbitMQ | `localhost:15672` | 请使用项目配置中的账号 | 请从安全配置获取 |
-| MinIO | `localhost:9001` | 请使用项目配置中的账号 | 请从安全配置获取 |
-| XXL-JOB | `localhost:8200/xxl-job-admin` | `admin` | `123456` |
+| 服务 | 说明 |
+|------|------|
+| Redis | 按本地配置连接 |
+| RabbitMQ | 自行设置账号密码 |
+| MinIO | 自行设置账号密码 |
+| XXL-JOB | 自行设置管理端账号密码 |
 
 ---
 
-## 六、数据库
+## 七、数据库
+
+数据库结构见：
+
+```text
+docs/sql/init-schema.sql
+```
 
 主要业务库：
 
@@ -208,17 +246,16 @@ mvn -pl huashui-gateway,huashui-auth,huashui-dormitory -am -DskipTests compile
 | `huashui_system` | 字典、配置、日志 |
 | `huashui_storage` | 文件记录 |
 | `huashui_dormitory` | 校区、楼栋、房间、床位、住宿记录、楼栋管理员 |
-| `huashui_repair` | 报修工单 |
 | `huashui_utility` | 水电余额、缴费订单 |
 | `huashui_evaluation` | 评价问卷、题目、答案、统计 |
 | `huashui_attendance` | 考勤记录 |
 | `huashui_leave` | 请假申请 |
-| `huashui_task` | 报修任务、保洁任务、任务模板 |
+| `huashui_task` | 报修工单、保洁任务、任务模板 |
 | `huashui_message` | 系统公告、站内消息、已读记录 |
 
 ---
 
-## 七、前端功能
+## 八、前端功能
 
 - 登录：账号登录、邮箱验证码登录、图形验证码
 - 角色差异化菜单
@@ -233,7 +270,7 @@ mvn -pl huashui-gateway,huashui-auth,huashui-dormitory -am -DskipTests compile
 
 ---
 
-## 八、常用角色
+## 九、常用角色
 
 | 角色编码 | 说明 |
 |----------|------|
@@ -245,15 +282,16 @@ mvn -pl huashui-gateway,huashui-auth,huashui-dormitory -am -DskipTests compile
 
 ---
 
-## 九、文档
+## 十、文档
 
 - 本地部署指南：`华水校园生活平台说明文档/本地环境部署指南.md`
+- 数据库建表脚本：`docs/sql/init-schema.sql`
 - 接口测试清单：`docs/接口测试清单.md`
 - 前端说明：`huashui-ui/README.md`
 
 ---
 
-## 十、常见问题
+## 十一、常见问题
 
 ### 1. 前端启动失败：`listen EACCES: permission denied 127.0.0.1:5173`
 
@@ -284,9 +322,15 @@ networkingMode=mirrored
 wsl --shutdown
 ```
 
-### 3. 云 MySQL 或 Nacos 连不上
+### 3. 数据库连接失败
 
-确认 SSH 隧道已启动并保持窗口打开，且服务器安全组允许 22 端口访问。
+确认已执行：
+
+```bash
+mysql -u root -p < docs/sql/init-schema.sql
+```
+
+并确认数据库用户密码与 Nacos / 后端配置一致。
 
 ### 4. Vite 首次启动报 `EPERM` 写入 `node_modules/.vite-temp`
 
