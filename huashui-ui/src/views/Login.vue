@@ -91,6 +91,7 @@ onMounted(loadCaptcha)
 
     <div class="login-card hs-panel">
       <div class="brand-line">
+        <img src="@/assets/logo.svg" class="brand-logo" alt="华水校园生活服务平台" />
         <div>
           <h1>校园生活服务平台</h1>
           <p>HUASHUI CAMPUS LIFE</p>
@@ -165,6 +166,12 @@ onMounted(loadCaptcha)
   z-index: 2;
   width: min(420px, 100%);
   padding: 34px;
+}
+.brand-logo {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  box-shadow: 0 10px 24px rgba(0,0,0,.16);
 }
 .brand-line {
   display: flex;

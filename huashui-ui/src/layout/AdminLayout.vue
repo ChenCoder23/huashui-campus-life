@@ -24,6 +24,7 @@ const allMenus: MenuNode[] = [
     label: '认证权限', icon: 'Lock', children: [
       { index: '/auth/menus', label: '菜单管理', roles: ['SUPER_ADMIN'] },
       { index: '/auth/roles', label: '角色管理', roles: ['SUPER_ADMIN'] },
+      { index: '/auth/users', label: '用户管理', roles: ['SUPER_ADMIN'] },
       { index: '/profile', label: '个人中心' }
     ]
   },
@@ -131,7 +132,7 @@ onMounted(loadUnread)
   <el-container class="admin">
     <el-aside width="248px" class="sidebar">
       <div class="brand">
-        <div class="brand-mark">华水</div>
+        <img src="@/assets/logo.svg" class="brand-logo" alt="华水校园生活服务平台" />
         <div>
           <div class="brand-title">校园生活服务平台</div>
           <div class="brand-sub">HUASHUI CAMPUS LIFE</div>
@@ -192,6 +193,12 @@ onMounted(loadUnread)
   gap: 12px;
   padding: 0 18px;
   border-bottom: 1px solid rgba(255,255,255,.12);
+}
+.brand-logo {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  box-shadow: 0 8px 20px rgba(0,0,0,.18);
 }
 .brand-mark {
   width: 40px;

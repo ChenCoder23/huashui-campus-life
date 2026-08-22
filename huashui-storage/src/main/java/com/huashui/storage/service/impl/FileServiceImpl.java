@@ -1,100 +1,150 @@
 package com.huashui.storage.service.impl;
 
-
+import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-
 import com.huashui.common.exception.BusinessException;
+import com.huashui.common.response.PageResult;
 import com.huashui.common.utils.UserContext;
 import com.huashui.storage.Enum.BizType;
+import com.huashui.storage.Enum.FileStatus;
+import com.huashui.storage.domain.dto.FilePageDTO;
 import com.huashui.storage.domain.pojo.SysFile;
 import com.huashui.storage.domain.vo.FileUploadVO;
 import com.huashui.storage.domain.vo.FileVO;
 import com.huashui.storage.mapper.SysFileMapper;
 import com.huashui.storage.service.FileService;
-
 import com.huashui.storage.util.MinioUtil;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import cn.hutool.crypto.digest.DigestUtil;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
-
+@Slf4j
 @Service
+@RequiredArgsConstructor
 public class FileServiceImpl extends ServiceImpl<SysFileMapper, SysFile> implements FileService {
 
-    @Autowired
-    private MinioUtil minioUtil;
+    private final MinioUtil minioUtil;
 
-
-    //上传文件
     @Override
     public FileUploadVO upload(MultipartFile file, BizType type) {
-       //获取文件的大小
         long size = file.getSize();
-        //校验文件的大小
-        if (!type.allowSize(size)){
-            throw  new BusinessException("文件太大");
+        if (!type.allowSize(size)) {
+            throw new BusinessException("文件太大");
         }
-        //获取文件的拓展名,并校验
-        String originalFilename = file.getOriginalFilename();
 
-        String extension = "";
-        if (originalFilename != null && originalFilename.contains(".")) {
-            extension = originalFilename.substring(originalFilename.lastIndexOf(".") + 1);
-        }
-        if (! type.allowExt(extension)){
+        String originalFilename = file.getOriginalFilename();
+        String extension = minioUtil.extractExt(originalFilename);
+        if (!type.allowExt(extension)) {
             throw new BusinessException("非法的文件类型");
         }
-        //如果合法,调用util上传MInio并返回VO,同时MQ更新数据库
+
         String objectName = minioUtil.buildObjectName(type, extension);
         String url = minioUtil.upload(file, objectName);
 
-        //  保存到file表
         SysFile sysFile = new SysFile();
-        sysFile.setOriginalName(file.getOriginalFilename());
+        sysFile.setOriginalName(originalFilename);
         sysFile.setObjectName(objectName);
         sysFile.setAccessUrl(url);
-        sysFile.setFileSize(file.getSize());
-        sysFile.setCreateTime(LocalDateTime.now());
-        sysFile.setUpdateTime(LocalDateTime.now());
-        sysFile.setMimeType("test");
-        sysFile.setFileHash("test");
-        sysFile.setUploaderId(1L);
-        sysFile.setBizType(type);
-        // todo MiME类型
+        sysFile.setFileSize(size);
+        sysFile.setMimeType(file.getContentType());
         sysFile.setFileExt(extension);
-        /*sysFile.setUploaderId(UserContext.getUserId());*/
-        // todo 定义监听器回填业务id
-
+        sysFile.setBizType(type);
+        sysFile.setStatus(FileStatus.NORMAL);
+        try {
+            sysFile.setUploaderId(UserContext.getUserId());
+        } catch (Exception e) {
+            sysFile.setUploaderId(1L);
+        }
+        try {
+            sysFile.setFileHash(DigestUtil.sha256Hex(file.getBytes()));
+        } catch (Exception e) {
+            sysFile.setFileHash("unset");
+        }
         save(sysFile);
 
-        //  包装vo返回
-        return new FileUploadVO(sysFile.getId(),url,originalFilename);
+        return new FileUploadVO(sysFile.getId(), url, originalFilename);
     }
 
-
-    //批量获取文件
     @Override
     public List<FileVO> getFilesByIds(String ids) {
-        //解析id列表
-        List<Long> fileIds = Arrays.stream(ids.split(","))
-                .map(Long::parseLong)
-                .toList();
-
-        for (Long fileId : fileIds) {
-            // todo 查询数据库封装VO
+        if (StrUtil.isBlank(ids)) {
+            return List.of();
+        }
+        List<Long> fileIds;
+        try {
+            fileIds = Arrays.stream(ids.split(","))
+                    .map(String::trim)
+                    .filter(StrUtil::isNotBlank)
+                    .map(Long::parseLong)
+                    .toList();
+        } catch (NumberFormatException e) {
+            throw new BusinessException("文件ID格式错误");
         }
 
-        return null;
+        if (fileIds.isEmpty()) {
+            return List.of();
+        }
+
+        return listByIds(fileIds).stream()
+                .map(this::toFileVO)
+                .collect(Collectors.toList());
     }
 
-
-    //删除文件
     @Override
     public void delete(Long id) {
-        // todo 待实现
+        SysFile sysFile = getById(id);
+        if (sysFile == null) {
+            throw new BusinessException("文件不存在");
+        }
+        if (StrUtil.isNotBlank(sysFile.getObjectName())) {
+            try {
+                minioUtil.remove(sysFile.getObjectName());
+            } catch (Exception e) {
+                log.error("[storage] MinIO 删除失败 id={}", id, e);
+            }
+        }
+        sysFile.setStatus(FileStatus.DELETED);
+        updateById(sysFile);
+    }
+
+    @Override
+    public PageResult<FileVO> page(FilePageDTO dto) {
+        LambdaQueryWrapper<SysFile> wrapper = new LambdaQueryWrapper<SysFile>()
+                .like(StrUtil.isNotBlank(dto.getOriginalName()), SysFile::getOriginalName, dto.getOriginalName())
+                .eq(dto.getBizType() != null, SysFile::getBizType, dto.getBizType())
+                .eq(dto.getUploaderId() != null, SysFile::getUploaderId, dto.getUploaderId())
+                .eq(dto.getStatus() != null, SysFile::getStatus, dto.getStatus())
+                .ge(dto.getBeginTime() != null, SysFile::getCreateTime, dto.getBeginTime())
+                .le(dto.getEndTime() != null, SysFile::getCreateTime, dto.getEndTime())
+                .orderByDesc(SysFile::getCreateTime);
+
+        Page<SysFile> page = page(dto.toPage(), wrapper);
+        List<FileVO> records = page.getRecords().stream()
+                .map(this::toFileVO)
+                .toList();
+        return PageResult.of(page.getTotal(), page.getPages(), page.getSize(), records);
+    }
+
+    private FileVO toFileVO(SysFile file) {
+        return FileVO.builder()
+                .fileId(file.getId())
+                .originalName(file.getOriginalName())
+                .url(file.getAccessUrl())
+                .fileSize(file.getFileSize())
+                .mimeType(file.getMimeType())
+                .fileExt(file.getFileExt())
+                .bizType(file.getBizType())
+                .bizId(file.getBizId())
+                .uploaderId(file.getUploaderId())
+                .createTime(file.getCreateTime())
+                .build();
     }
 }

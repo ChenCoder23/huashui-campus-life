@@ -13,6 +13,7 @@ const router = createRouter({
         { path: 'dashboard', component: () => import('@/views/Dashboard.vue'), meta: { title: '总览' } },
         { path: 'auth/menus', component: () => import('@/views/auth/MenuManage.vue'), meta: { title: '菜单管理' } },
         { path: 'auth/roles', component: () => import('@/views/auth/RoleManage.vue'), meta: { title: '角色管理' } },
+        { path: 'auth/users', component: () => import('@/views/auth/UserManage.vue'), meta: { title: '用户管理' } },
         { path: 'profile', component: () => import('@/views/auth/Profile.vue'), meta: { title: '个人中心' } },
         { path: 'system/dict-type', component: () => import('@/views/system/DictType.vue'), meta: { title: '字典类型' } },
         { path: 'system/dict-data', component: () => import('@/views/system/DictData.vue'), meta: { title: '字典数据' } },

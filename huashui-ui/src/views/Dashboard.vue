@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { attendanceApi, dormitoryApi, messageApi } from '@/api'
+import campusBanner from '@/assets/login-carousel/1552382688_5438_thumb.jpg'
 
 const stats = ref<any>(null)
 const myDorm = ref<any>(null)
@@ -32,6 +33,14 @@ onMounted(load)
       <div class="cn">总览</div>
       <div class="en">Overview</div>
       <div class="hs-waterline"></div>
+    </div>
+
+    <div class="dashboard-banner hs-panel">
+      <img :src="campusBanner" alt="校园风光" />
+      <div class="banner-text">
+        <strong>华水校园生活服务平台</strong>
+        <span>宿舍 · 报修 · 考勤 · 缴费 · 通知</span>
+      </div>
     </div>
 
     <el-row :gutter="16">
@@ -79,6 +88,31 @@ onMounted(load)
 </template>
 
 <style scoped>
+.dashboard-banner {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 16px;
+  padding: 14px;
+}
+.dashboard-banner img {
+  width: 180px;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 10px;
+}
+.banner-text {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.banner-text strong {
+  font-size: 20px;
+  color: var(--hs-deep);
+}
+.banner-text span {
+  color: var(--hs-muted);
+}
 .stat-card {
   padding: 20px;
 }

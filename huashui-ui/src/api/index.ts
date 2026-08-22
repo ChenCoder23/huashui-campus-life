@@ -21,7 +21,11 @@ export const authApi = {
   roles: () => http.get('/auth/roles'),
   updateRole: (id: number, data: any) => http.put(`/auth/roles/${id}`, data),
   userRoles: (id: number) => http.get(`/auth/users/${id}/roles`),
-  setUserRoles: (id: number, roleId: number) => http.put(`/auth/users/${id}/roles`, roleId)
+  setUserRoles: (id: number, roleId: number) => http.put(`/auth/users/${id}/roles`, roleId),
+  adminUserPage: (params: any) => http.get('/auth/admin/users/page', { params }),
+  adminUserCreate: (data: any) => http.post('/auth/admin/users', data),
+  adminUserStatus: (id: number, status: number) => http.put(`/auth/admin/users/${id}/status`, null, { params: { status } }),
+  adminUserResetPassword: (id: number, password: string) => http.put(`/auth/admin/users/${id}/password`, { password })
 }
 
 // 系统
