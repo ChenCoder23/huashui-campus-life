@@ -14,6 +14,7 @@ const captchaLoading = ref(false)
 
 const avatarUrl = computed(() => auth.profile?.avatar || '')
 const avatarText = computed(() => (auth.profile?.realName || auth.profile?.username || '华').slice(0, 1))
+const isSuperAdmin = computed(() => auth.profile?.userType === 'SUPER_ADMIN')
 
 async function load() {
   const res: any = await authApi.profileMenus()
@@ -130,7 +131,7 @@ onMounted(() => {
             <el-button type="primary" @click="bindEmail">保存</el-button>
           </el-form>
         </div>
-        <div class="hs-panel" style="margin-top:16px">
+        <div v-if="!isSuperAdmin" class="hs-panel" style="margin-top:16px">
           <h3>我的权限菜单</h3>
           <el-tree :data="menus" node-key="id" :props="{ label: 'menuName', children: 'children' }" />
         </div>
