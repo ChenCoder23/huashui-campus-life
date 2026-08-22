@@ -133,7 +133,7 @@ onMounted(loadUnread)
   <el-container class="admin">
     <el-aside width="248px" class="sidebar">
       <div class="brand">
-        <img src="@/assets/logo.svg" class="brand-logo" alt="华水校园生活服务平台" />
+        <img src="@/assets/favicon.png" class="brand-logo" alt="华水校园生活服务平台" />
         <div>
           <div class="brand-title">校园生活服务平台</div>
           <div class="brand-sub">HUASHUI CAMPUS LIFE</div>

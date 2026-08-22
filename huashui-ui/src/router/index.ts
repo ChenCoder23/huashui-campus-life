@@ -26,7 +26,7 @@ const router = createRouter({
         { path: 'dormitory/building', component: () => import('@/views/dormitory/Building.vue'), meta: { title: '楼栋管理' } },
         { path: 'dormitory/room', component: () => import('@/views/dormitory/Room.vue'), meta: { title: '房间管理' } },
         { path: 'dormitory/record', component: () => import('@/views/dormitory/Record.vue'), meta: { title: '住宿记录' } },
-        { path: 'dormitory/my', component: () => import('@/views/dormitory/MyDorm.vue'), meta: { title: '我的宿舍' } },
+        { path: 'dormitory/my', component: () => import('@/views/dormitory/MyDorm.vue'), meta: { title: '我的宿舍', roles: ['STUDENT'] } },
         { path: 'utility/water', component: () => import('@/views/utility/Water.vue'), meta: { title: '水费余额' } },
         { path: 'utility/electric', component: () => import('@/views/utility/Electric.vue'), meta: { title: '电费余额' } },
         { path: 'utility/payment', component: () => import('@/views/utility/Payment.vue'), meta: { title: '缴费记录' } },
@@ -55,6 +55,14 @@ router.beforeEach((to) => {
   }
   if (to.path === '/login' && localStorage.getItem(TOKEN_KEY)) {
     return '/dashboard'
+  }
+  const profileRaw = localStorage.getItem('huashui_profile')
+  if (to.meta.roles && Array.isArray(to.meta.roles)) {
+    const profile = profileRaw ? JSON.parse(profileRaw) : null
+    const role = profile?.userType || profile?.user_type || ''
+    if (!to.meta.roles.includes(role)) {
+      return '/dashboard'
+    }
   }
   return true
 })
