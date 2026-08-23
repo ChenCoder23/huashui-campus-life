@@ -92,7 +92,7 @@ onMounted(load)
 
     <div class="hs-panel">
       <div class="toolbar">
-        <el-button type="primary" plain @click="openCreate">新增校区</el-button>
+        <el-button type="primary" @click="openCreate">新增校区</el-button>
       </div>
 
       <el-table :data="rows" border stripe v-loading="loading">

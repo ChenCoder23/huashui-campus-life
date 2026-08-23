@@ -3,11 +3,23 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.png" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>华水校园生活服务平台</title>
   </head>
   <body>
     <div id="app"></div>
+    <script>
+      (() => {
+        try {
+          const saved = localStorage.getItem('app-shell-theme')
+          const theme = saved === 'light' || saved === 'dark'
+            ? saved
+            : (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+          document.documentElement.dataset.theme = theme
+          document.documentElement.classList.toggle('dark', theme === 'dark')
+        } catch {}
+      })()
+    </script>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

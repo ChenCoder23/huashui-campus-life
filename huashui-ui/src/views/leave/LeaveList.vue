@@ -1,8 +1,12 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { leaveApi } from '@/api'
+import { useAuthStore } from '@/store/auth'
 
+const auth = useAuthStore()
+const isManager = computed(() => ['SUPER_ADMIN', 'DORM_MANAGER'].includes(auth.profile?.userType || ''))
+const isStaff = computed(() => ['STUDENT', 'CLEANER', 'REPAIRER'].includes(auth.profile?.userType || ''))
 const rows = ref<any[]>([]); const total = ref(0); const loading = ref(false)
 const query = reactive({ pageNum:1, pageSize:10, status:'' })
 const createVisible = ref(false)
@@ -47,7 +51,7 @@ onMounted(load)
       <el-form inline @submit.prevent>
         <el-form-item label="状态"><el-select v-model="query.status" clearable style="width:140px"><el-option v-for="s in ['PENDING','APPROVED','REJECTED','CANCELLED']" :key="s" :label="s" :value="s" /></el-select></el-form-item>
         <el-button type="primary" @click="load">查询</el-button>
-        <el-button type="primary" plain @click="createVisible=true">申请请假</el-button>
+        <el-button type="primary" v-if="isStaff" @click="createVisible=true">申请请假</el-button>
       </el-form>
       <el-table :data="rows" border stripe v-loading="loading">
         <el-table-column prop="id" label="ID" width="70" />
@@ -60,16 +64,16 @@ onMounted(load)
         <el-table-column prop="approveOpinion" label="审批意见" />
         <el-table-column label="操作" width="190" fixed="right">
           <template #default="{ row }">
-            <el-button v-if="row.status==='PENDING'" link type="primary" @click="approve(row)">通过</el-button>
-            <el-button v-if="row.status==='PENDING'" link type="danger" @click="reject(row)">驳回</el-button>
-            <el-button v-if="['PENDING','APPROVED'].includes(row.status)" link type="warning" @click="cancel(row)">撤回</el-button>
+            <el-button v-if="isManager && row.status==='PENDING'" link type="primary" @click="approve(row)">通过</el-button>
+            <el-button v-if="isManager && row.status==='PENDING'" link type="danger" @click="reject(row)">驳回</el-button>
+            <el-button v-if="isStaff && ['PENDING','APPROVED'].includes(row.status)" link type="warning" @click="cancel(row)">撤回</el-button>
           </template>
         </el-table-column>
       </el-table>
       <div class="pager"><el-pagination v-model:current-page="query.pageNum" v-model:page-size="query.pageSize" :total="total" layout="total, prev, pager, next" @current-change="load" /></div>
     </div>
 
-    <el-dialog v-model="createVisible" title="申请请假" width="560px" destroy-on-close>
+    <el-dialog v-if="isStaff" v-model="createVisible" title="申请请假" width="560px" destroy-on-close>
       <el-form :model="form" label-width="90px">
         <el-form-item label="类型"><el-input v-model="form.leaveType" placeholder="如：事假 / 病假" /></el-form-item>
         <el-form-item label="开始时间"><el-date-picker v-model="form.startTime" type="datetime" value-format="YYYY-MM-DDTHH:mm:ss" style="width:100%" /></el-form-item>

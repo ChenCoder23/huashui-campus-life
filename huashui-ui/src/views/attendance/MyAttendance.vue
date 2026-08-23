@@ -6,6 +6,7 @@ import { attendanceApi } from '@/api'
 const today = ref<any>(null)
 const rows = ref<any[]>([])
 const loading = ref(false)
+const checkInLoading = ref(false)
 const checkForm = reactive({ checkInType: 'GPS', location: '', photoUrl: '' })
 
 async function load() {
@@ -19,7 +20,8 @@ async function load() {
 
 async function checkIn() {
   if (!checkForm.location) { ElMessage.warning('请输入位置'); return }
-  try { await attendanceApi.checkIn(checkForm); ElMessage.success('打卡成功'); load() } catch {}
+  checkInLoading.value = true
+  try { await attendanceApi.checkIn(checkForm); ElMessage.success('打卡成功'); load() } catch {} finally { checkInLoading.value = false }
 }
 
 onMounted(load)
@@ -33,11 +35,11 @@ onMounted(load)
         <el-form-item label="打卡方式"><el-select v-model="checkForm.checkInType"><el-option label="GPS" value="GPS" /><el-option label="拍照" value="PHOTO" /></el-select></el-form-item>
         <el-form-item label="位置"><el-input v-model="checkForm.location" placeholder="如：龙子湖校区 1 号教学楼" style="width:260px" /></el-form-item>
         <el-form-item label="照片URL"><el-input v-model="checkForm.photoUrl" style="width:220px" /></el-form-item>
-        <el-button type="primary" @click="checkIn">立即打卡</el-button>
+        <el-button type="primary" :loading="checkInLoading" :disabled="checkInLoading" @click="checkIn">立即打卡</el-button>
       </el-form>
       <el-alert v-if="today" :title="`今日状态：${today.checkInStatus || '未打卡'}，打卡时间：${today.checkInTime || '—'}`" type="success" show-icon />
     </div>
-    <div class="hs-panel" style="margin-top:16px">
+    <div class="hs-panel">
       <el-table :data="rows" border stripe v-loading="loading">
         <el-table-column prop="id" label="ID" width="70" />
         <el-table-column prop="attendanceDate" label="日期" />

@@ -59,7 +59,7 @@ onMounted(load)
       <div class="cn">菜单管理</div><div class="en">Menus</div><div class="hs-waterline"></div>
     </div>
     <div class="hs-panel">
-      <el-button type="primary" plain @click="openCreate(0)">新增根菜单</el-button>
+      <el-button type="primary" @click="openCreate(0)">新增根菜单</el-button>
       <el-table :data="rows" row-key="id" border v-loading="loading" style="margin-top: 14px">
         <el-table-column prop="menuName" label="菜单名称" min-width="160" />
         <el-table-column prop="menuType" label="类型" width="100" />

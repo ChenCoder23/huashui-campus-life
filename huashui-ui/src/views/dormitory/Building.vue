@@ -149,7 +149,7 @@ onMounted(() => { resetForm(); loadCampus(); load() })
           <el-select v-model="query.campusId" clearable style="width:160px"><el-option v-for="c in campuses" :key="c.id" :label="c.campusName" :value="c.id" /></el-select>
         </el-form-item>
         <el-form-item label="楼栋名称"><el-input v-model="query.buildingName" clearable style="width:150px" /></el-form-item>
-        <el-form-item><el-button type="primary" @click="load">查询</el-button><el-button type="primary" plain @click="openCreate">新增楼栋</el-button></el-form-item>
+        <el-form-item><el-button type="primary" @click="load">查询</el-button><el-button type="primary" @click="openCreate">新增楼栋</el-button></el-form-item>
       </el-form>
       <el-table :data="rows" border stripe v-loading="loading">
         <el-table-column prop="id" label="编号" width="80" />

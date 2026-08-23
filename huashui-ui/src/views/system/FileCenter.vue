@@ -59,13 +59,13 @@ onMounted(load)
             <el-option label="已删除" :value="0" />
           </el-select>
         </el-form-item>
-        <el-button type="primary" @click="load">查询</el-button>
+        <el-button native-type="submit" type="primary" @click="load">查询</el-button>
       </el-form>
 
       <el-table :data="rows" border stripe v-loading="loading">
         <el-table-column label="预览" width="80">
           <template #default="{ row }">
-            <el-image :src="row.url" fit="cover" style="width:40px;height:40px;border-radius:6px" />
+            <el-image :src="row.url" fit="cover" style="width:40px;height:40px;border-radius:4px" />
           </template>
         </el-table-column>
         <el-table-column prop="originalName" label="文件名" show-overflow-tooltip />

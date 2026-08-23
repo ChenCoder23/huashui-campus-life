@@ -166,7 +166,7 @@ onMounted(() => {
         <el-form-item>
           <el-button type="primary" @click="load">查询</el-button>
           <el-button @click="query.buildingId=''; query.roomNumber=''; query.floorNumber=''; query.status=''; query.campusId=''; load()">重置</el-button>
-          <el-button type="primary" plain @click="openCreate">新增房间</el-button>
+          <el-button type="primary" @click="openCreate">新增房间</el-button>
         </el-form-item>
       </el-form>
 

@@ -26,7 +26,7 @@ onMounted(async () => {
       </el-descriptions>
       <el-empty v-else description="暂无宿舍信息" />
     </div>
-    <div class="hs-panel" style="margin-top:16px">
+    <div class="hs-panel">
       <h3>我的室友</h3>
       <el-table :data="roommates" border>
         <el-table-column prop="bedNumber" label="床位" />
@@ -44,8 +44,8 @@ onMounted(async () => {
 
 <style scoped>
 .roommate-avatar {
-  background: linear-gradient(135deg, #e8d5b7, #c85c40);
-  color: #0b3c5d;
+  background: var(--primary);
+  color: var(--primary-foreground);
   font-weight: 700;
 }
 h3 { margin: 0 0 16px; color: var(--hs-deep); }

@@ -11,10 +11,12 @@ const emailForm = reactive({ email: '', code: '' })
 const uploading = ref(false)
 const captchaImage = ref('')
 const captchaLoading = ref(false)
+const emailCodeLoading = ref(false)
 
 const avatarUrl = computed(() => auth.profile?.avatar || '')
 const avatarText = computed(() => (auth.profile?.realName || auth.profile?.username || '华').slice(0, 1))
 const isSuperAdmin = computed(() => auth.profile?.userType === 'SUPER_ADMIN')
+const roleLabel = computed(() => ({ SUPER_ADMIN: '超级管理员', DORM_MANAGER: '宿舍管理员', STUDENT: '学生', CLEANER: '保洁人员', REPAIRER: '维修人员' }[auth.profile?.userType || ''] || auth.profile?.userType || '校园用户'))
 
 async function load() {
   const res: any = await authApi.profileMenus()
@@ -47,6 +49,20 @@ async function changePassword() {
     ElMessage.success('密码已更新')
     await loadPasswordCaptcha()
   } catch {}
+}
+
+async function sendEmailCode() {
+  if (!emailForm.email) {
+    ElMessage.warning('请输入邮箱')
+    return
+  }
+  emailCodeLoading.value = true
+  try {
+    await authApi.sendEmailCode(emailForm.email)
+    ElMessage.success('验证码已发送')
+  } catch {} finally {
+    emailCodeLoading.value = false
+  }
 }
 
 async function bindEmail() {
@@ -90,6 +106,7 @@ onMounted(() => {
       <el-avatar :size="72" :src="avatarUrl" class="profile-avatar">{{ avatarText }}</el-avatar>
       <div class="profile-meta">
         <div class="profile-name">{{ auth.profile?.realName || auth.profile?.username || '华水用户' }}</div>
+        <div class="profile-role">{{ roleLabel }}</div>
         <el-upload
           :show-file-list="false"
           accept="image/jpeg,image/png,image/webp"
@@ -102,8 +119,8 @@ onMounted(() => {
       </div>
     </div>
 
-    <el-row :gutter="16" style="margin-top:16px">
-      <el-col :span="12">
+    <el-row :gutter="16">
+      <el-col :xs="24" :md="12">
         <div class="hs-panel">
           <h3>修改密码</h3>
           <el-form :model="passwordForm" label-width="90px">
@@ -114,7 +131,9 @@ onMounted(() => {
             <el-form-item label="图形验证码">
               <div class="captcha-row">
                 <el-input v-model="passwordForm.captchaCode" placeholder="请输入验证码" />
-                <img v-if="captchaImage" :src="captchaImage" class="captcha" title="点击刷新" @click="loadPasswordCaptcha" />
+                <button v-if="captchaImage" type="button" class="captcha-button" aria-label="刷新图形验证码" title="点击刷新" @click="loadPasswordCaptcha">
+                  <img :src="captchaImage" class="captcha" alt="图形验证码，点击刷新" />
+                </button>
                 <el-button v-else :loading="captchaLoading" @click="loadPasswordCaptcha">获取验证码</el-button>
               </div>
             </el-form-item>
@@ -122,16 +141,21 @@ onMounted(() => {
           </el-form>
         </div>
       </el-col>
-      <el-col :span="12">
+      <el-col :xs="24" :md="12">
         <div class="hs-panel">
           <h3>绑定 / 更换邮箱</h3>
           <el-form :model="emailForm" label-width="90px">
             <el-form-item label="邮箱"><el-input v-model="emailForm.email" /></el-form-item>
-            <el-form-item label="验证码"><el-input v-model="emailForm.code" /></el-form-item>
+            <el-form-item label="验证码">
+              <div class="captcha-row">
+                <el-input v-model="emailForm.code" />
+                <el-button type="primary" plain :loading="emailCodeLoading" :disabled="emailCodeLoading" @click="sendEmailCode">发送验证码</el-button>
+              </div>
+            </el-form-item>
             <el-button type="primary" @click="bindEmail">保存</el-button>
           </el-form>
         </div>
-        <div v-if="!isSuperAdmin" class="hs-panel" style="margin-top:16px">
+        <div v-if="!isSuperAdmin" class="hs-panel profile-permissions">
           <h3>我的权限菜单</h3>
           <el-tree :data="menus" node-key="id" :props="{ label: 'menuName', children: 'children' }" />
         </div>
@@ -147,8 +171,8 @@ onMounted(() => {
   gap: 20px;
 }
 .profile-avatar {
-  background: linear-gradient(135deg, #e8d5b7, #c85c40);
-  color: #0b3c5d;
+  background: var(--primary);
+  color: var(--primary-foreground);
   font-weight: 800;
   font-size: 26px;
 }
@@ -157,6 +181,11 @@ onMounted(() => {
   font-weight: 800;
   color: var(--hs-deep);
   margin-bottom: 8px;
+}
+.profile-role {
+  margin: -4px 0 10px;
+  font-size: 12px;
+  color: var(--text-tertiary);
 }
 .profile-tip {
   margin-top: 8px;
@@ -169,13 +198,20 @@ onMounted(() => {
   gap: 10px;
   width: 100%;
 }
+.captcha-button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
 .captcha {
   height: 40px;
   width: 120px;
   object-fit: cover;
-  border-radius: 6px;
-  border: 1px solid #dfe7eb;
+  border-radius: 4px;
+  border: 1px solid var(--border-strong);
   cursor: pointer;
 }
+.profile-permissions { margin-top: 16px; }
 h3 { margin: 0 0 16px; color: var(--hs-deep); }
 </style>

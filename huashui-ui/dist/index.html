@@ -3,12 +3,24 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.png" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>华水校园生活服务平台</title>
-    <script type="module" crossorigin src="/assets/index-C3BP5_zo.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-BE_WPkMq.css">
+    <script type="module" crossorigin src="/assets/index-CzK5OCFC.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-D34zXF5D.css">
   </head>
   <body>
     <div id="app"></div>
+    <script>
+      (() => {
+        try {
+          const saved = localStorage.getItem('app-shell-theme')
+          const theme = saved === 'light' || saved === 'dark'
+            ? saved
+            : (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+          document.documentElement.dataset.theme = theme
+          document.documentElement.classList.toggle('dark', theme === 'dark')
+        } catch {}
+      })()
+    </script>
   </body>
 </html>

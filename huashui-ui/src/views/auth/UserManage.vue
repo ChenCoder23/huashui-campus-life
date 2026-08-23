@@ -65,17 +65,23 @@ function openCreate() {
   createVisible.value = true
 }
 
+const createLoading = ref(false)
+const resetLoading = ref(false)
+
 async function submitCreate() {
   if (!createForm.username || !createForm.password || !createForm.realName) {
     ElMessage.warning('请填写账号、密码和姓名')
     return
   }
   try {
+    createLoading.value = true
     await authApi.adminUserCreate(createForm)
     ElMessage.success('新增成功')
     createVisible.value = false
     load()
-  } catch {}
+  } catch {} finally {
+    createLoading.value = false
+  }
 }
 
 async function toggleStatus(row: any) {
@@ -99,10 +105,13 @@ async function submitResetPassword() {
     return
   }
   try {
+    resetLoading.value = true
     await authApi.adminUserResetPassword(currentUser.value.id, resetPassword.value)
     ElMessage.success('密码已重置')
     resetVisible.value = false
-  } catch {}
+  } catch {} finally {
+    resetLoading.value = false
+  }
 }
 
 onMounted(load)
@@ -124,7 +133,7 @@ onMounted(load)
           <el-input v-model="query.keyword" clearable placeholder="账号/姓名/手机号" style="width:220px" />
         </el-form-item>
         <el-button type="primary" @click="load">查询</el-button>
-        <el-button type="primary" plain @click="openCreate">新增{{ roleMap[activeRole] }}</el-button>
+        <el-button type="primary" @click="openCreate"><el-icon aria-hidden="true"><Plus /></el-icon>新增{{ roleMap[activeRole] }}</el-button>
       </el-form>
 
       <el-table :data="rows" border stripe v-loading="loading">
@@ -179,7 +188,7 @@ onMounted(load)
       </el-form>
       <template #footer>
         <el-button @click="createVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitCreate">保存</el-button>
+        <el-button type="primary" :loading="createLoading" :disabled="createLoading" @click="submitCreate">保存</el-button>
       </template>
     </el-dialog>
 
@@ -189,7 +198,7 @@ onMounted(load)
       </el-form>
       <template #footer>
         <el-button @click="resetVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitResetPassword">保存</el-button>
+        <el-button type="primary" :loading="resetLoading" :disabled="resetLoading" @click="submitResetPassword">保存</el-button>
       </template>
     </el-dialog>
   </section>

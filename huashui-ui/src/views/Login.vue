@@ -4,36 +4,36 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { authApi } from '@/api'
 import { useAuthStore } from '@/store/auth'
-
-import carousel1 from '@/assets/login-carousel/1552382688_2217_thumb.jpg'
-import carousel2 from '@/assets/login-carousel/1552382688_5438_thumb.jpg'
-import carousel3 from '@/assets/login-carousel/1552382688_7673_thumb.jpg'
-import carousel4 from '@/assets/login-carousel/15c1b3164f69432582e1e90ad4333f4e.jpeg'
-import carousel5 from '@/assets/login-carousel/3934b471879440a2b71f38bba902d14a.jpeg'
-import carousel6 from '@/assets/login-carousel/e439ba2ccce84c9495720471487d96ab.jpeg'
+import { useTheme } from '@/composables/useTheme'
+import campusImage from '@/assets/login-carousel/1552382688_5438_thumb.jpg'
+import './login.css'
 
 const router = useRouter()
 const route = useRoute()
 const auth = useAuthStore()
+const { isDark, themeLabel, toggleTheme } = useTheme()
 const tab = ref<'account' | 'email'>('account')
 const captchaImage = ref('')
 const captchaKey = ref('')
 const loading = ref(false)
+const sending = ref(false)
 const accountForm = reactive({ account: '', password: '', captchaCode: '' })
 const emailForm = reactive({ email: '', code: '' })
-const sending = ref(false)
-
-const carouselImages = [carousel1, carousel2, carousel3, carousel4, carousel5, carousel6]
 
 async function loadCaptcha() {
-  const res: any = await authApi.captcha()
-  captchaImage.value = res.data.captchaImage
-  captchaKey.value = res.data.captchaKey
+  try {
+    const res: any = await authApi.captcha()
+    captchaImage.value = res.data.captchaImage
+    captchaKey.value = res.data.captchaKey
+    accountForm.captchaCode = ''
+  } catch {
+    ElMessage.error('验证码加载失败，请稍后重试')
+  }
 }
 
 async function login() {
   if (!accountForm.account || !accountForm.password || !accountForm.captchaCode) {
-    ElMessage.warning('请填写完整登录信息')
+    ElMessage.warning('请填写账号、密码和验证码')
     return
   }
   loading.value = true
@@ -42,6 +42,8 @@ async function login() {
     auth.setLogin(res.data)
     ElMessage.success('登录成功')
     router.replace((route.query.redirect as string) || '/dashboard')
+  } catch {
+    try { await loadCaptcha() } catch {}
   } finally {
     loading.value = false
   }
@@ -81,136 +83,85 @@ onMounted(loadCaptcha)
 </script>
 
 <template>
-  <div class="login-page">
-    <el-carousel class="login-carousel" height="100%" :interval="3000" arrow="never" indicator-position="none">
-      <el-carousel-item v-for="img in carouselImages" :key="img">
-        <img :src="img" class="carousel-image" alt="校园风景" />
-      </el-carousel-item>
-    </el-carousel>
-
-
-    <div class="login-card hs-panel">
-      <div class="brand-line">
-        <img src="@/assets/logo.svg" class="brand-logo" alt="华水校园生活服务平台" />
-        <div>
-          <h1>校园生活服务平台</h1>
-          <p>HUASHUI CAMPUS LIFE</p>
-        </div>
+  <main class="login-page">
+    <section class="login-visual" aria-label="校园风景">
+      <img :src="campusImage" alt="华北水利水电大学校园湖畔与教学楼" width="800" height="500" />
+      <div class="visual-copy">
+        <div class="visual-eyebrow">华北水利水电大学</div>
+        <h2>校园生活服务统一入口</h2>
+        <p>宿舍、报修、考勤、缴费与通知服务。</p>
       </div>
+    </section>
 
-      <el-tabs v-model="tab" stretch>
-        <el-tab-pane label="账号登录" name="account">
-          <el-form @submit.prevent>
-            <el-form-item>
-              <el-input v-model="accountForm.account" placeholder="学号 / 工号 / 手机号 / 邮箱" size="large" />
-            </el-form-item>
-            <el-form-item>
-              <el-input v-model="accountForm.password" type="password" placeholder="密码" size="large" show-password />
-            </el-form-item>
-            <el-form-item>
-              <div class="captcha-row">
-                <el-input v-model="accountForm.captchaCode" placeholder="验证码" size="large" />
-                <img v-if="captchaImage" :src="captchaImage" class="captcha" title="点击刷新" @click="loadCaptcha" />
-              </div>
-            </el-form-item>
-            <el-button type="primary" size="large" class="login-btn" :loading="loading" @click="login">登录</el-button>
-          </el-form>
-        </el-tab-pane>
+    <section class="login-workspace" aria-labelledby="login-title">
+      <el-button class="login-theme-button" circle :aria-label="themeLabel" :title="themeLabel" @click="toggleTheme">
+        <el-icon><Sunny v-if="isDark" /><Moon v-else /></el-icon>
+      </el-button>
 
-        <el-tab-pane label="邮箱登录" name="email">
-          <el-form @submit.prevent>
-            <el-form-item>
-              <el-input v-model="emailForm.email" placeholder="邮箱" size="large" />
-            </el-form-item>
-            <el-form-item>
-              <div class="captcha-row">
-                <el-input v-model="emailForm.code" placeholder="邮箱验证码" size="large" />
-                <el-button size="large" :loading="sending" @click="sendCode">发送验证码</el-button>
-              </div>
-            </el-form-item>
-            <el-button type="primary" size="large" class="login-btn" :loading="loading" @click="emailLogin">登录</el-button>
-          </el-form>
-        </el-tab-pane>
-      </el-tabs>
+      <div class="login-card">
+        <div class="brand-line">
+          <img src="@/assets/logo.svg" class="brand-logo" alt="" aria-hidden="true" />
+          <div><h1>校园生活服务平台</h1><p>HUASHUI CAMPUS LIFE</p></div>
+        </div>
+        <div class="login-heading">
+          <h2 id="login-title">欢迎回来</h2>
+          <p>使用校园统一身份信息登录工作台</p>
+        </div>
 
-      <div class="login-foot">统一身份认证 · 华北水利水电大学校园生活服务</div>
-    </div>
-  </div>
+        <el-tabs v-model="tab" class="login-tabs" stretch>
+          <el-tab-pane label="账号登录" name="account">
+            <el-form class="login-form" @submit.prevent="login">
+              <el-form-item>
+                <div class="field-stack">
+                  <label class="field-label" for="login-account">账号</label>
+                  <el-input id="login-account" v-model="accountForm.account" autocomplete="username" placeholder="学号、工号、手机号或邮箱" size="large" />
+                </div>
+              </el-form-item>
+              <el-form-item>
+                <div class="field-stack">
+                  <label class="field-label" for="login-password">密码</label>
+                  <el-input id="login-password" v-model="accountForm.password" autocomplete="current-password" type="password" placeholder="请输入密码" size="large" show-password />
+                </div>
+              </el-form-item>
+              <el-form-item>
+                <div class="field-stack">
+                  <label class="field-label" for="login-captcha">图形验证码</label>
+                  <div class="captcha-row">
+                    <el-input id="login-captcha" v-model="accountForm.captchaCode" autocomplete="off" placeholder="请输入验证码" size="large" />
+                    <button v-if="captchaImage" type="button" class="captcha-button" aria-label="刷新图形验证码" @click="loadCaptcha">
+                      <img :src="captchaImage" class="captcha" alt="图形验证码，点击刷新" width="120" height="44" />
+                    </button>
+                  </div>
+                </div>
+              </el-form-item>
+              <el-button native-type="submit" type="primary" size="large" class="login-btn" :loading="loading" :disabled="loading">登录</el-button>
+            </el-form>
+          </el-tab-pane>
+
+          <el-tab-pane label="邮箱登录" name="email">
+            <el-form class="login-form" @submit.prevent="emailLogin">
+              <el-form-item>
+                <div class="field-stack">
+                  <label class="field-label" for="login-email">邮箱</label>
+                  <el-input id="login-email" v-model="emailForm.email" autocomplete="email" type="email" placeholder="请输入已绑定邮箱" size="large" />
+                </div>
+              </el-form-item>
+              <el-form-item>
+                <div class="field-stack">
+                  <label class="field-label" for="login-email-code">邮箱验证码</label>
+                  <div class="captcha-row">
+                    <el-input id="login-email-code" v-model="emailForm.code" autocomplete="one-time-code" placeholder="请输入验证码" size="large" />
+                    <el-button size="large" :loading="sending" :disabled="sending" @click="sendCode">发送验证码</el-button>
+                  </div>
+                </div>
+              </el-form-item>
+              <el-button native-type="submit" type="primary" size="large" class="login-btn" :loading="loading" :disabled="loading">登录</el-button>
+            </el-form>
+          </el-tab-pane>
+        </el-tabs>
+
+        <div class="login-foot">统一身份认证 · 华北水利水电大学校园生活服务</div>
+      </div>
+    </section>
+  </main>
 </template>
-
-<style scoped>
-.login-page {
-  position: relative;
-  min-height: 100vh;
-  display: grid;
-  place-items: center;
-  padding: 24px;
-  overflow: hidden;
-  background: linear-gradient(135deg, rgba(11, 60, 93, 0.95), rgba(29, 106, 150, 0.75));
-}
-.login-carousel {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 0;
-}
-.carousel-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-.login-card {
-  position: relative;
-  z-index: 2;
-  width: min(420px, 100%);
-  padding: 34px;
-}
-.brand-logo {
-  width: 52px;
-  height: 52px;
-  border-radius: 14px;
-  box-shadow: 0 10px 24px rgba(0,0,0,.16);
-}
-.brand-line {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  margin-bottom: 24px;
-}
-h1 {
-  margin: 0;
-  font-size: 22px;
-  color: var(--hs-deep);
-}
-p {
-  margin: 3px 0 0;
-  font-size: 11px;
-  letter-spacing: .18em;
-  color: var(--hs-muted);
-}
-.captcha-row {
-  display: flex;
-  gap: 10px;
-  width: 100%;
-}
-.captcha {
-  height: 40px;
-  width: 120px;
-  object-fit: cover;
-  border-radius: 6px;
-  border: 1px solid #dfe7eb;
-  cursor: pointer;
-}
-.login-btn {
-  width: 100%;
-  margin-top: 6px;
-}
-.login-foot {
-  margin-top: 20px;
-  text-align: center;
-  color: var(--hs-muted);
-  font-size: 12px;
-}
-</style>

@@ -49,6 +49,7 @@ const props = withDefaults(defineProps<{
 })
 
 const loading = ref(false)
+const submitLoading = ref(false)
 const rows = ref<any[]>([])
 const total = ref(0)
 const query = reactive<any>({ pageNum: 1, pageSize: 10 })
@@ -106,6 +107,9 @@ async function submit() {
       return
     }
   }
+  if (submitLoading.value) return
+
+  submitLoading.value = true
   try {
     if (editId.value === null) {
       await props.api.create({ ...model })
@@ -116,7 +120,9 @@ async function submit() {
     }
     dialogVisible.value = false
     load()
-  } catch {}
+  } catch {} finally {
+    submitLoading.value = false
+  }
 }
 
 async function remove(row: any) {
@@ -147,41 +153,45 @@ onMounted(() => {
 </script>
 
 <template>
-  <section class="hs-page">
-    <div class="hs-page-title">
-      <div class="cn">{{ title }}</div>
-      <div v-if="en" class="en">{{ en }}</div>
-      <div class="hs-waterline"></div>
-    </div>
+  <section class="hs-page" :aria-label="title" :aria-busy="loading">
+
 
     <div class="hs-panel">
-      <el-form inline class="hs-search" @submit.prevent>
-        <el-form-item v-for="field in search" :key="field.prop" :label="field.label">
-          <el-select v-if="field.type === 'select'" v-model="searchForm[field.prop]" clearable placeholder="全部" style="width: 180px">
-            <el-option v-for="opt in field.options" :key="String(opt.value)" :label="opt.label" :value="opt.value" />
-          </el-select>
-          <el-input v-else v-model="searchForm[field.prop]" clearable :placeholder="field.placeholder || '请输入'" style="width: 180px" />
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" @click="search">查询</el-button>
-          <el-button @click="reset">重置</el-button>
-          <el-button type="primary" plain @click="openCreate">{{ createText }}</el-button>
-        </el-form-item>
-      </el-form>
+      <div class="hs-toolbar">
+        <el-form inline class="hs-search" @submit.prevent="search">
+          <div class="hs-search-fields">
+            <el-form-item v-for="field in search" :key="field.prop" :label="field.label">
+              <el-select v-if="field.type === 'select'" v-model="searchForm[field.prop]" clearable placeholder="全部" class="hs-search-control">
+                <el-option v-for="opt in field.options" :key="String(opt.value)" :label="opt.label" :value="opt.value" />
+              </el-select>
+              <el-input v-else v-model="searchForm[field.prop]" clearable :placeholder="field.placeholder || '请输入'" class="hs-search-control" />
+            </el-form-item>
+          </div>
+          <div class="hs-search-actions">
+            <el-button native-type="submit" type="primary">查询</el-button>
+            <el-button @click="reset">重置</el-button>
+          </div>
+        </el-form>
+        <div class="hs-primary-actions">
+          <el-button type="primary" @click="openCreate"><el-icon aria-hidden="true"><Plus /></el-icon><span>{{ createText }}</span></el-button>
+        </div>
+      </div>
 
-      <el-table :data="rows" v-loading="loading" border stripe>
-        <el-table-column v-for="col in columns" :key="col.prop" :prop="col.prop" :label="col.label" :width="col.width" show-overflow-tooltip>
-          <template #default="{ row }">
-            {{ col.formatter ? col.formatter(row) : row[col.prop] }}
-          </template>
-        </el-table-column>
-        <el-table-column label="操作" width="140" fixed="right">
-          <template #default="{ row }">
-            <el-button link type="primary" @click="openEdit(row)">编辑</el-button>
-            <el-button link type="danger" @click="remove(row)">删除</el-button>
-          </template>
-        </el-table-column>
-      </el-table>
+      <div class="hs-table-wrap">
+        <el-table :data="rows" v-loading="loading" border stripe>
+          <el-table-column v-for="col in columns" :key="col.prop" :prop="col.prop" :label="col.label" :width="col.width" show-overflow-tooltip>
+            <template #default="{ row }">
+              {{ col.formatter ? col.formatter(row) : row[col.prop] }}
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" width="140" fixed="right">
+            <template #default="{ row }">
+              <el-button link type="primary" @click="openEdit(row)">编辑</el-button>
+              <el-button link type="danger" @click="remove(row)">删除</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
 
       <div class="hs-pagination">
         <el-pagination
@@ -196,8 +206,8 @@ onMounted(() => {
       </div>
     </div>
 
-    <el-dialog v-model="dialogVisible" :title="editId === null ? `新增${title}` : `编辑${title}`" width="640px" append-to-body destroy-on-close>
-      <el-form :model="model" label-width="110px">
+    <el-dialog v-model="dialogVisible" :title="editId === null ? `新增${title}` : `编辑${title}`" width="min(640px, calc(100vw - 32px))" append-to-body destroy-on-close>
+      <el-form :model="model" label-width="110px" class="hs-dialog-form">
         <el-row :gutter="16">
           <el-col v-for="field in form" :key="field.prop" :span="field.span || 12">
             <el-form-item :label="field.label" :required="field.required">
@@ -215,20 +225,125 @@ onMounted(() => {
         </el-row>
       </el-form>
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="submit">保存</el-button>
+        <el-button :disabled="submitLoading" @click="dialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="submitLoading" :disabled="submitLoading" @click="submit">保存</el-button>
       </template>
     </el-dialog>
   </section>
 </template>
 
 <style scoped>
-.hs-search {
-  margin-bottom: 14px;
+.hs-page {
+  min-width: 0;
 }
+
+.hs-panel {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 20px;
+}
+
+.hs-toolbar {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.hs-search {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  min-width: 0;
+  margin-bottom: 0;
+}
+
+.hs-search-fields,
+.hs-search-actions,
+.hs-primary-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.hs-search-fields {
+  flex: 1;
+  min-width: 0;
+}
+
+.hs-search :deep(.el-form-item) {
+  margin: 0;
+}
+
+.hs-search-control {
+  width: 180px;
+}
+
+.hs-primary-actions {
+  flex: 0 0 auto;
+}
+
+.hs-table-wrap {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.hs-table-wrap :deep(.el-table) {
+  min-width: 680px;
+}
+
 .hs-pagination {
   display: flex;
   justify-content: flex-end;
+  max-width: 100%;
   margin-top: 16px;
+  overflow-x: auto;
+}
+
+.hs-pagination :deep(.el-pagination) {
+  flex-wrap: nowrap;
+  min-width: max-content;
+}
+
+@media (max-width: 768px) {
+  .hs-panel {
+    padding: 16px;
+  }
+
+  .hs-toolbar {
+    display: block;
+  }
+
+  .hs-search {
+    display: block;
+  }
+
+  .hs-search-fields,
+  .hs-search-actions {
+    margin-bottom: 10px;
+  }
+
+  .hs-search-fields {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .hs-search :deep(.el-form-item),
+  .hs-search-control {
+    width: 100%;
+  }
+
+  .hs-primary-actions {
+    justify-content: flex-start;
+  }
+
+  .hs-dialog-form :deep(.el-col) {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
 }
 </style>

@@ -57,7 +57,7 @@ onMounted(load)
       </el-table>
       <div class="pager"><el-pagination v-model:current-page="query.pageNum" v-model:page-size="query.pageSize" :total="total" layout="total, prev, pager, next" @current-change="load" /></div>
     </div>
-    <div class="hs-panel" style="margin-top:16px">
+    <div class="hs-panel">
       <h3>统计</h3>
       <el-descriptions :column="5" border v-if="stats">
         <el-descriptions-item label="总数">{{ stats.total }}</el-descriptions-item>
