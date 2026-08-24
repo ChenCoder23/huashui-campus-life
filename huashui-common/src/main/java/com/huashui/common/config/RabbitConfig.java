@@ -88,8 +88,8 @@ public class RabbitConfig {
         //  消费端也设置 JSON 转换
         factory.setMessageConverter(jacksonConverter());
 
-        //  手动 ACK 模式（默认 AUTO：正常返回就 ack，抛异常就 nack）
-        factory.setAcknowledgeMode(AcknowledgeMode.MANUAL); // 改成 MANUAL 需要手动 basicAck
+        //  自动 ACK 模式（正常返回就 ack，抛异常就 nack）
+        factory.setAcknowledgeMode(AcknowledgeMode.AUTO);
 
         //  Prefetch：一次拿多少条
         factory.setPrefetchCount(10);
