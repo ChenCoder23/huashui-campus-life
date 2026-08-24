@@ -24,16 +24,12 @@ import com.huashui.notification.mapper.SystemNoticeMapper;
 import com.huashui.notification.service.SystemNoticeService;
 import com.huashui.notification.util.DelayMessageUtil;
 import com.huashui.notification.utils.NoticeUtil;
-import com.rabbitmq.client.Channel;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
-import org.springframework.amqp.support.AmqpHeaders;
-import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
@@ -234,18 +230,8 @@ public class SystemNoticeServiceImpl extends ServiceImpl<SystemNoticeMapper, Sys
     }
 
     @RabbitListener(queues = MQConstants.DLX_QUEUE_NOTICE)
-    public void handleNoticePublish(
-            NoticePublishEvent event,
-            Channel channel,
-            @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) throws IOException {
-
-        try {
-            publish(event.getNoticeId());
-            channel.basicAck(deliveryTag, false);
-        } catch (Exception e) {
-            log.error("公告自动发布失败，noticeId={}", event.getNoticeId(), e);
-            channel.basicNack(deliveryTag, false, false);
-        }
+    public void handleNoticePublish(NoticePublishEvent event) {
+        publish(event.getNoticeId());
     }
 
     @Override
