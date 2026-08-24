@@ -6,7 +6,7 @@ import com.huashui.task.service.TaskService;
 import com.xxl.job.core.handler.annotation.XxlJob;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
@@ -20,7 +20,7 @@ public class TaskArchiveJob {
 
 
     @Resource
-    private RedisTemplate<String,Object> redisTemplate;
+    private StringRedisTemplate redisTemplate;
 
 
     @Resource
