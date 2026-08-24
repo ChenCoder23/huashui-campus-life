@@ -280,7 +280,8 @@ public class TaskServiceImpl extends ServiceImpl<TaskMapper, Task> implements Ta
         String key = CLEAN_TASK_PRE + LocalDate.now();
 
         //2. 根据taskId查询Redis Hash
-        Task task = (Task) redisTemplate.opsForHash().get(key, dto.getTaskId().toString());
+        Object value = redisTemplate.opsForHash().get(key, dto.getTaskId().toString());
+        Task task = value == null ? null : JSONUtil.toBean(value.toString(), Task.class);
 
         if(task == null){
             throw new BusinessException("任务不存在");
@@ -324,7 +325,7 @@ public class TaskServiceImpl extends ServiceImpl<TaskMapper, Task> implements Ta
                 .put(
                         key,
                         dto.getTaskId().toString(),
-                        task);
+                        JSONUtil.toJsonStr(task));
 
     }
 
