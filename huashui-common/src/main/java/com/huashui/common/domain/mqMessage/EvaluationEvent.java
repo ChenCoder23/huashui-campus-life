@@ -16,10 +16,4 @@ public class EvaluationEvent {
      */
     private Long questionnaireId;
 
-    /**
-     * 消息版本号
-     * 防止旧延迟消息执行
-     */
-    private Long version;
-
 }

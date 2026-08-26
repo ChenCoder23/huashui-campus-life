@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.huashui.api.client.dorm.BuildingClient;
 import com.huashui.api.client.dorm.CampusClient;
+import com.huashui.common.constants.MQConstants;
 import com.huashui.common.domain.mqMessage.EvaluationEvent;
 import com.huashui.common.exception.BusinessException;
 import com.huashui.common.response.PageResult;
@@ -93,17 +94,14 @@ public class EvaluationQuestionnaireServiceImpl extends ServiceImpl<EvaluationQu
 
         //发送评价问卷开始时间的消息
         delayMessageUtil.sendDelayMessage(
-                "evaluation.start",
-                EvaluationEvent.builder().version(1L).questionnaireId(questionnaireId).build(),
+                MQConstants.EVALUATION_START_DELAY_KEY,
+                EvaluationEvent.builder().questionnaireId(questionnaireId).build(),
                 dto.getStartTime());
-        //发送评价问卷开始时间的消息
+        //发送评价问卷结束时间的消息
         delayMessageUtil.sendDelayMessage(
-                "evaluation.end",
-                EvaluationEvent.builder().version(1L).questionnaireId(questionnaireId).build(),
+                MQConstants.EVALUATION_FINISH_DELAY_KEY,
+                EvaluationEvent.builder().questionnaireId(questionnaireId).build(),
                 dto.getEndTime());
-        //向redis里保存消息版本号
-        redisTemplate.opsForValue().set("evaluation:version:start:"+questionnaireId, 1L);
-        redisTemplate.opsForValue().set("evaluation:version:end:"+questionnaireId, 1L);
         return questionnaireId;
     }
 
@@ -112,21 +110,30 @@ public class EvaluationQuestionnaireServiceImpl extends ServiceImpl<EvaluationQu
         Long questionnaireId = event.getQuestionnaireId();
         //1. 查询问卷
         EvaluationQuestionnaire questionnaire = getById(questionnaireId);
-        //2. 修改状态
+        //2. 执行前校验：问卷已删除或状态已变更，旧消息直接丢弃
+        if (questionnaire == null) {
+            return;
+        }
+        if (questionnaire.getStatus() != QuestionStatus.WAITING) {
+            return;
+        }
+        //3. 执行前校验：开始时间被改晚时，旧延迟消息不生效
+        if (LocalDateTime.now().isBefore(questionnaire.getStartTime())) {
+            return;
+        }
+        //4. 修改状态
         questionnaire.setStatus(QuestionStatus.RUNNING);
-        //3. 根据范围查询学生
+        //5. 根据范围查询学生
         List<Long> studentIds = getStudents(questionnaire);
         // 回填需要评价的学生总人数
         int num = studentIds.size();
         questionnaire.setTotalCount(num);
         //回填状态
         updateById(questionnaire);
-        //4. 保存Redis
+        //6. 保存Redis待评价学生集合
         String key = "evaluation:waiting:" + questionnaireId;
         redisTemplate.opsForSet()
                 .add(key, studentIds.toArray(new Long[0]));
-        //删除redis的消息版本号
-        redisTemplate.delete("evaluation:version:start:"+questionnaireId);
     }
 
 
@@ -159,23 +166,32 @@ public class EvaluationQuestionnaireServiceImpl extends ServiceImpl<EvaluationQu
         Long questionnaireId = event.getQuestionnaireId();
         //1. 查询问卷
         EvaluationQuestionnaire questionnaire = getById(questionnaireId);
-        //设置状态
+        //2. 执行前校验：问卷已删除或状态已变更，旧消息直接丢弃
+        if (questionnaire == null) {
+            return;
+        }
+        if (questionnaire.getStatus() != QuestionStatus.RUNNING) {
+            return;
+        }
+        //3. 执行前校验：截止时间被改晚时，旧延迟消息不生效
+        if (LocalDateTime.now().isBefore(questionnaire.getEndTime())) {
+            return;
+        }
+        //4. 设置状态
         questionnaire.setStatus(QuestionStatus.FINISHED);
         //回填状态
         updateById(questionnaire);
 
-        //2. 获取未评价学生
+        //5. 获取未评价学生
         String key = "evaluation:waiting:" + questionnaireId;
         Set<Long> studentIds = redisTemplate.opsForSet().members(key);
 
         if(studentIds != null && !studentIds.isEmpty()){
-            //3.  todo 所有ComplateFuture异步实现 生成未评价记录
+            //6.  todo 所有ComplateFuture异步实现 生成未评价记录
             createExpiredResponse(questionnaireId, studentIds);
         }
-        //4. 删除Redis
+        //7. 删除Redis
         redisTemplate.delete(key);
-        // 消息处理完毕删除redis里的消息版本号
-        redisTemplate.delete("evaluation:version:end:"+questionnaireId);
     }
 
 
@@ -306,7 +322,9 @@ public class EvaluationQuestionnaireServiceImpl extends ServiceImpl<EvaluationQu
             throw new BusinessException("只有未开始的问卷可以修改");
         }
 
-        //3. 修改基本信息
+        //3. 修改基本信息（先记录旧时间，用于判断时间是否变化）
+        LocalDateTime oldStartTime = questionnaire.getStartTime();
+        LocalDateTime oldEndTime = questionnaire.getEndTime();
         BeanUtil.copyProperties(dto,questionnaire);
         updateById(questionnaire);
 
@@ -330,25 +348,19 @@ public class EvaluationQuestionnaireServiceImpl extends ServiceImpl<EvaluationQu
             questionItemService.saveBatch(items);
 
         }
-        // 判断开始时间是否改变
-        if (dto.getStartTime() != null &&questionnaire.getStartTime() != dto.getStartTime()) {
-            //评价开始时间改变
-            Long increment = redisTemplate.opsForValue().increment("evaluation:version:start:");
-            //重新发送评价问卷开始时间的消息
+        // 判断开始时间是否改变，改变则重发开始延迟消息
+        if (dto.getStartTime() != null && !dto.getStartTime().equals(oldStartTime)) {
             delayMessageUtil.sendDelayMessage(
-                    "evaluation.start",
-                    EvaluationEvent.builder().version(increment).questionnaireId(id).build(),
+                    MQConstants.EVALUATION_START_DELAY_KEY,
+                    EvaluationEvent.builder().questionnaireId(id).build(),
                     dto.getStartTime());
         }
-        // 判断结束时间是否改变
-        if (dto.getEndTime() != null &&questionnaire.getEndTime() != dto.getEndTime()) {
-            //评价结束时间改变
-            Long increment = redisTemplate.opsForValue().increment("evaluation:version:end:");
-            //重新发送评价问卷开始时间的消息
+        // 判断结束时间是否改变，改变则重发结束延迟消息
+        if (dto.getEndTime() != null && !dto.getEndTime().equals(oldEndTime)) {
             delayMessageUtil.sendDelayMessage(
-                    "evaluation.end",
-                    EvaluationEvent.builder().version(increment).questionnaireId(id).build(),
-                    dto.getStartTime());
+                    MQConstants.EVALUATION_FINISH_DELAY_KEY,
+                    EvaluationEvent.builder().questionnaireId(id).build(),
+                    dto.getEndTime());
         }
 
     }
@@ -373,11 +385,8 @@ public class EvaluationQuestionnaireServiceImpl extends ServiceImpl<EvaluationQu
         questionItemService.remove(
                 new LambdaQueryWrapper<EvaluationQuestionItem>()
                         .eq(EvaluationQuestionItem::getQuestionnaireId, id));
-        //4. 删除问卷
+        //4. 删除问卷（旧延迟消息到期时会因查不到问卷而自动丢弃）
         removeById(id);
-        // 清空消息队列的消息(删除版本号信息即可)
-        redisTemplate.delete("evaluation:version:start:" + id);
-        redisTemplate.delete("evaluation:version:end:" + id);
 
     }
 
@@ -418,8 +427,6 @@ public class EvaluationQuestionnaireServiceImpl extends ServiceImpl<EvaluationQu
 
         //6. 删除Redis待评价集合
         redisTemplate.delete("evaluation:waiting:" + id);
-        //  删除评价结束的消息版本号
-        redisTemplate.delete("evaluation:version:end:" + id);
     }
 
     @Override
