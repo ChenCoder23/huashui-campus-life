@@ -14,6 +14,11 @@ public enum NoticeStatus {
     DRAFT("DRAFT", "草稿"),
 
     /**
+     * 待发布（已设置定时发布时间，等待发布）
+     */
+    PENDING("PENDING", "待发布"),
+
+    /**
      * 已发布
      */
     PUBLISHED("PUBLISHED", "已发布"),

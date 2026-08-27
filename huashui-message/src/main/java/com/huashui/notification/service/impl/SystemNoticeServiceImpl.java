@@ -30,6 +30,7 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 
@@ -109,7 +110,7 @@ public class SystemNoticeServiceImpl extends ServiceImpl<SystemNoticeMapper, Sys
 
         LambdaQueryWrapper<SystemNotice> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(SystemNotice::getPublisherId, userId);
-        wrapper.eq(SystemNotice::getStatus, NoticeStatus.DRAFT);
+        wrapper.in(SystemNotice::getStatus, List.of(NoticeStatus.DRAFT, NoticeStatus.PENDING));
         wrapper.like(dto.getTitle() != null && !dto.getTitle().isBlank(), SystemNotice::getTitle, dto.getTitle());
         wrapper.eq(dto.getNoticeType() != null && !dto.getNoticeType().isBlank(), SystemNotice::getNoticeType, dto.getNoticeType());
         wrapper.orderByDesc(SystemNotice::getUpdateTime);
@@ -145,7 +146,9 @@ public class SystemNoticeServiceImpl extends ServiceImpl<SystemNoticeMapper, Sys
         if (notice == null) {
             throw new BusinessException("公告不存在");
         }
-        if (notice.getStatus() == NoticeStatus.DRAFT || notice.getStatus() == NoticeStatus.REVOKED) {
+        if (notice.getStatus() == NoticeStatus.DRAFT
+                || notice.getStatus() == NoticeStatus.PENDING
+                || notice.getStatus() == NoticeStatus.REVOKED) {
             throw new BusinessException("公告未发布或已撤回");
         }
 
@@ -162,9 +165,12 @@ public class SystemNoticeServiceImpl extends ServiceImpl<SystemNoticeMapper, Sys
         if (notice == null) {
             throw new BusinessException("公告不存在");
         }
-        if (notice.getStatus() != NoticeStatus.DRAFT) {
-            throw new BusinessException("仅草稿状态可修改");
+        if (notice.getStatus() != NoticeStatus.DRAFT && notice.getStatus() != NoticeStatus.PENDING) {
+            throw new BusinessException("仅草稿或待发布状态可修改");
         }
+
+        // 记录旧发布时间，用于判断是否需要重发延迟消息
+        LocalDateTime oldPublishTime = notice.getPublishTime();
 
         notice.setTitle(dto.getTitle());
         notice.setContent(dto.getContent());
@@ -177,10 +183,13 @@ public class SystemNoticeServiceImpl extends ServiceImpl<SystemNoticeMapper, Sys
         notice.setIsTop(toTopStatus(dto.getIsTop()));
         if (dto.getPublishTime() != null) {
             notice.setPublishTime(dto.getPublishTime());
+            // 设置了发布时间即为“待发布”，等待延迟消息触发
+            notice.setStatus(NoticeStatus.PENDING);
         }
         updateById(notice);
 
-        if (dto.getPublishTime() != null) {
+        // 发布时间发生变化时，重发延迟发布消息（与评价问卷保持一致）
+        if (dto.getPublishTime() != null && !dto.getPublishTime().equals(oldPublishTime)) {
             NoticePublishEvent event = NoticePublishEvent.builder().noticeId(id).build();
             delayMessageUtil.sendDelayMessage(
                     MQConstants.DELAY_EXCHANGE_NOTICE,
@@ -209,29 +218,37 @@ public class SystemNoticeServiceImpl extends ServiceImpl<SystemNoticeMapper, Sys
         if (notice == null) {
             throw new BusinessException("公告不存在");
         }
-        if (notice.getStatus() != NoticeStatus.DRAFT) {
-            throw new BusinessException("仅草稿状态可删除");
+        if (notice.getStatus() != NoticeStatus.DRAFT && notice.getStatus() != NoticeStatus.PENDING) {
+            throw new BusinessException("仅草稿或待发布状态可删除");
         }
         removeById(id);
     }
 
+    @Override
     @Transactional(rollbackFor = Exception.class)
-    public void publish(Long noticeId) {
+    public void publish(NoticePublishEvent event) {
+        Long noticeId = event.getNoticeId();
         SystemNotice notice = getById(noticeId);
         if (notice == null) {
-            throw new BusinessException("公告不存在");
+            return;
         }
-        if (notice.getStatus() != NoticeStatus.DRAFT) {
-            log.info("公告当前状态不允许发布，noticeId={}, status={}", noticeId, notice.getStatus());
+        // 幂等：只有待发布状态才会被定时消息发布
+        if (notice.getStatus() != NoticeStatus.PENDING) {
+            log.info("公告当前状态不允许定时发布，noticeId={}, status={}", noticeId, notice.getStatus());
+            return;
+        }
+        // 陈旧消息校验：发布时间已被修改，旧延迟消息不生效
+        if (!event.isSameExecuteTime(notice.getPublishTime())) {
+            log.info("公告发布时间已变更，丢弃旧延迟消息，noticeId={}", noticeId);
             return;
         }
         notice.setStatus(NoticeStatus.PUBLISHED);
         updateById(notice);
     }
 
-    @RabbitListener(queues = MQConstants.DLX_QUEUE_NOTICE)
+    @RabbitListener(queues = MQConstants.NOTICE_PUBLISH_QUEUE)
     public void handleNoticePublish(NoticePublishEvent event) {
-        publish(event.getNoticeId());
+        publish(event);
     }
 
     @Override
@@ -251,7 +268,8 @@ public class SystemNoticeServiceImpl extends ServiceImpl<SystemNoticeMapper, Sys
         notice.setIsTop(toTopStatus(dto.getIsTop()));
         notice.setPublishTime(dto.getPublishTime());
         notice.setPublisherId(publisherId);
-        notice.setStatus(NoticeStatus.DRAFT);
+        // 创建即为“待发布”，等待延迟消息到点发布
+        notice.setStatus(NoticeStatus.PENDING);
 
         save(notice);
 

@@ -117,8 +117,8 @@ public class EvaluationQuestionnaireServiceImpl extends ServiceImpl<EvaluationQu
         if (questionnaire.getStatus() != QuestionStatus.WAITING) {
             return;
         }
-        //3. 执行前校验：开始时间被改晚时，旧延迟消息不生效
-        if (LocalDateTime.now().isBefore(questionnaire.getStartTime())) {
+        //3. 执行前校验：开始时间被改晚时，旧延迟消息不生效（用消息体执行时间等值校验）
+        if (!event.isSameExecuteTime(questionnaire.getStartTime())) {
             return;
         }
         //4. 修改状态
@@ -173,8 +173,8 @@ public class EvaluationQuestionnaireServiceImpl extends ServiceImpl<EvaluationQu
         if (questionnaire.getStatus() != QuestionStatus.RUNNING) {
             return;
         }
-        //3. 执行前校验：截止时间被改晚时，旧延迟消息不生效
-        if (LocalDateTime.now().isBefore(questionnaire.getEndTime())) {
+        //3. 执行前校验：截止时间被改晚时，旧延迟消息不生效（用消息体执行时间等值校验）
+        if (!event.isSameExecuteTime(questionnaire.getEndTime())) {
             return;
         }
         //4. 设置状态

@@ -101,105 +101,38 @@ public class RabbitConfig {
     }
 
     // =========================================================
-    // 评价模块 Exchange
+    // 延迟交换机（rabbitmq_delayed_message_exchange 插件）
+    //
+    // 说明：使用 x-delayed-message 类型交换机，按每条消息的 x-delay
+    // 头独立延迟，消息之间不会因为“先入队的旧消息延迟更长”而互相阻塞，
+    // 因此不再需要“延迟队列 + 死信队列”的 TTL 方案。
     // =========================================================
 
     /**
      * 评价模块延迟交换机
      */
     @Bean
-    public DirectExchange evaluationDelayExchange() {
-
-        return new DirectExchange(
-                MQConstants.DELAY_EXCHANGE
-        );
+    public CustomExchange evaluationDelayExchange() {
+        return buildDelayedExchange(MQConstants.DELAY_EXCHANGE);
     }
 
     /**
-     * 评价模块死信交换机
+     * 公告模块延迟交换机
      */
     @Bean
-    public DirectExchange evaluationDlxExchange() {
-
-        return new DirectExchange(
-                MQConstants.DLX_EXCHANGE
-        );
+    public CustomExchange noticeDelayExchange() {
+        return buildDelayedExchange(MQConstants.DELAY_EXCHANGE_NOTICE);
     }
 
-
-    // =========================================================
-    // 公告模块 Exchange
-    // =========================================================
-
-    /**
-     * 公告延迟交换机
-     */
-    @Bean
-    public DirectExchange noticeDelayExchange() {
-
-        return new DirectExchange(
-                MQConstants.DELAY_EXCHANGE_NOTICE
-        );
+    private CustomExchange buildDelayedExchange(String name) {
+        Map<String, Object> args = new HashMap<>();
+        // 延迟交换机底层按 direct 方式路由
+        args.put("x-delayed-type", "direct");
+        return new CustomExchange(name, "x-delayed-message", true, false, args);
     }
 
-    /**
-     * 公告死信交换机
-     */
-    @Bean
-    public DirectExchange noticeDlxExchange() {
-
-        return new DirectExchange(
-                MQConstants.DLX_EXCHANGE_NOTICE
-        );
-    }
-
-
     // =========================================================
-    // 评价模块：延迟队列
-    // =========================================================
-
-    /**
-     * 评价开始延迟队列
-     */
-    @Bean
-    public Queue evaluationStartDelayQueue() {
-
-        return QueueBuilder
-                .durable(
-                        MQConstants.EVALUATION_START_DELAY_QUEUE
-                )
-                .deadLetterExchange(
-                        MQConstants.DLX_EXCHANGE
-                )
-                .deadLetterRoutingKey(
-                        MQConstants.EVALUATION_START_KEY
-                )
-                .build();
-    }
-
-
-    /**
-     * 评价结束延迟队列
-     */
-    @Bean
-    public Queue evaluationFinishDelayQueue() {
-
-        return QueueBuilder
-                .durable(
-                        MQConstants.EVALUATION_END_DELAY_QUEUE
-                )
-                .deadLetterExchange(
-                        MQConstants.DLX_EXCHANGE
-                )
-                .deadLetterRoutingKey(
-                        MQConstants.EVALUATION_FINISH_KEY
-                )
-                .build();
-    }
-
-
-    // =========================================================
-    // 评价模块：最终消费队列
+    // 业务消费队列（直接绑定到延迟交换机）
     // =========================================================
 
     /**
@@ -207,157 +140,59 @@ public class RabbitConfig {
      */
     @Bean
     public Queue evaluationStartQueue() {
-
         return QueueBuilder
-                .durable(
-                        MQConstants.EVALUATION_START_QUEUE
-                )
+                .durable(MQConstants.EVALUATION_START_QUEUE)
                 .build();
     }
-
 
     /**
      * 评价结束消费队列
      */
     @Bean
     public Queue evaluationFinishQueue() {
-
         return QueueBuilder
-                .durable(
-                        MQConstants.EVALUATION_END_QUEUE
-                )
+                .durable(MQConstants.EVALUATION_END_QUEUE)
                 .build();
     }
 
-
-    // =========================================================
-    // 评价模块：延迟队列 Binding
-    // =========================================================
-
     /**
-     * 评价开始延迟队列绑定
+     * 公告定时发布消费队列
      */
     @Bean
-    public Binding evaluationStartDelayBinding() {
-
-        return BindingBuilder
-                .bind(evaluationStartDelayQueue())
-                .to(evaluationDelayExchange())
-                .with(MQConstants.EVALUATION_START_DELAY_KEY);
+    public Queue noticePublishQueue() {
+        return QueueBuilder
+                .durable(MQConstants.NOTICE_PUBLISH_QUEUE)
+                .build();
     }
 
-
-    /**
-     * 评价结束延迟队列绑定
-     */
-    @Bean
-    public Binding evaluationFinishDelayBinding() {
-
-        return BindingBuilder
-                .bind(evaluationFinishDelayQueue())
-                .to(evaluationDelayExchange())
-                .with(MQConstants.EVALUATION_FINISH_DELAY_KEY);
-    }
-
-
     // =========================================================
-    // 评价模块：死信队列 Binding
+    // Binding：业务队列直接绑定到延迟交换机
     // =========================================================
 
-    /**
-     * 评价开始死信队列绑定
-     */
     @Bean
     public Binding evaluationStartBinding() {
-
         return BindingBuilder
                 .bind(evaluationStartQueue())
-                .to(evaluationDlxExchange())
-                .with(MQConstants.EVALUATION_START_KEY);
+                .to(evaluationDelayExchange())
+                .with(MQConstants.EVALUATION_START_DELAY_KEY)
+                .noargs();
     }
 
-
-    /**
-     * 评价结束死信队列绑定
-     */
     @Bean
     public Binding evaluationFinishBinding() {
-
         return BindingBuilder
                 .bind(evaluationFinishQueue())
-                .to(evaluationDlxExchange())
-                .with(MQConstants.EVALUATION_FINISH_KEY);
+                .to(evaluationDelayExchange())
+                .with(MQConstants.EVALUATION_FINISH_DELAY_KEY)
+                .noargs();
     }
 
-
-    // =========================================================
-    // 公告模块：延迟队列
-    // =========================================================
-
-    /**
-     * 公告延迟队列
-     */
     @Bean
-    public Queue noticeDelayQueue() {
-
-        return QueueBuilder
-                .durable(
-                        MQConstants.DELAY_QUEUE_NOTICE
-                )
-                .deadLetterExchange(
-                        MQConstants.DLX_EXCHANGE_NOTICE
-                )
-                .deadLetterRoutingKey(
-                        MQConstants.NOTICE_DLX_KEY
-                )
-                .build();
-    }
-
-
-    // =========================================================
-    // 公告模块：最终消费队列
-    // =========================================================
-
-    /**
-     * 公告消费队列
-     */
-    @Bean
-    public Queue noticeDlxQueue() {
-
-        return QueueBuilder
-                .durable(
-                        MQConstants.DLX_QUEUE_NOTICE
-                )
-                .build();
-    }
-
-
-    // =========================================================
-    // 公告模块：Binding
-    // =========================================================
-
-    /**
-     * 公告延迟队列绑定
-     */
-    @Bean
-    public Binding noticeDelayBinding() {
-
+    public Binding noticePublishBinding() {
         return BindingBuilder
-                .bind(noticeDelayQueue())
+                .bind(noticePublishQueue())
                 .to(noticeDelayExchange())
-                .with(MQConstants.NOTICE_DELAY_KEY);
-    }
-
-
-    /**
-     * 公告死信队列绑定
-     */
-    @Bean
-    public Binding noticeDlxBinding() {
-
-        return BindingBuilder
-                .bind(noticeDlxQueue())
-                .to(noticeDlxExchange())
-                .with(MQConstants.NOTICE_DLX_KEY);
+                .with(MQConstants.NOTICE_DELAY_KEY)
+                .noargs();
     }
 }

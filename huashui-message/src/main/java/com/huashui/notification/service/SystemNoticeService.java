@@ -6,6 +6,7 @@ import com.huashui.notification.domain.dto.CreateNoticeDTO;
 import com.huashui.notification.domain.dto.NoticePageQueryDTO;
 import com.huashui.notification.domain.dto.NoticeScrollQueryDTO;
 import com.huashui.notification.domain.dto.UpdateNoticeDTO;
+import com.huashui.notification.domain.event.NoticePublishEvent;
 import com.huashui.notification.domain.pojo.SystemNotice;
 import com.huashui.notification.domain.vo.DictVO;
 import com.huashui.notification.domain.vo.NoticeVO;
@@ -35,4 +36,9 @@ public interface SystemNoticeService extends IService<SystemNotice> {
     void deleteDraft(Long id);
 
     NoticeVO detail(Long id);
+
+    /**
+     * 定时发布公告（由延迟消息触发）
+     */
+    void publish(NoticePublishEvent event);
 }
