@@ -264,23 +264,35 @@ public class AttendanceRecordServiceImpl extends ServiceImpl<AttendanceRecordMap
         if (start == null || end == null) {
             throw new BusinessException("请假日期不能为空");
         }
+
+        LocalDate today = LocalDate.now();
+        // 只处理今天及未来的请假日期，避免补写历史考勤
+        LocalDate from = start.isBefore(today) ? today : start;
+        if (from.isAfter(end)) {
+            return;
+        }
+
         // 为请假日期范围内的每一天写入/更新考勤记录
-        for (LocalDate date = start; !date.isAfter(end); date = date.plusDays(1)) {
+        for (LocalDate date = from; !date.isAfter(end); date = date.plusDays(1)) {
             AttendanceRecord record = lambdaQuery()
                     .eq(AttendanceRecord::getWorkerId, dto.getWorkerId())
                     .eq(AttendanceRecord::getAttendanceDate, date)
                     .one();
+
             if (record == null) {
+                // 当天还没有生成考勤记录，直接插入请假记录
                 record = new AttendanceRecord();
                 record.setWorkerId(dto.getWorkerId());
+                record.setWorkerName(dto.getWorkerName());
                 record.setCampusId(dto.getCampusId());
                 record.setAttendanceDate(date);
                 record.setCheckInStatus(AttendanceStatus.LEAVE);
                 record.setIsHoliday(false);
                 record.setRemark(dto.getRemark());
                 save(record);
-            } else if (record.getCheckInTime() == null) {
-                // 已有记录且未签到，改为请假状态
+            } else {
+                // 已有考勤记录：无论当天是否已经签到，都将状态改为请假
+                record.setWorkerName(dto.getWorkerName());
                 record.setCheckInStatus(AttendanceStatus.LEAVE);
                 record.setRemark(dto.getRemark());
                 updateById(record);

@@ -1,9 +1,9 @@
 package com.huashui.leave.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
-import com.huashui.api.client.attendance.AttendanceClient;
-import com.huashui.api.domain.dto.attendance.LeaveAttendanceDTO;
+import com.huashui.api.client.user.UserClient;
 import com.huashui.common.constants.MQConstants;
+import com.huashui.common.domain.dto.UserSimpleInfo;
 import com.huashui.common.domain.mqMessage.LeaveEvent;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -29,12 +29,12 @@ public class LeaveRequestServiceImpl
         extends ServiceImpl<LeaveRequestMapper, LeaveRequest>
         implements LeaveRequestService {
 
-    private final AttendanceClient attendanceClient;
+    private final UserClient userClient;
 
     private final RabbitTemplate rabbitTemplate;
 
-    public LeaveRequestServiceImpl(AttendanceClient attendanceClient, RabbitTemplate rabbitTemplate) {
-        this.attendanceClient = attendanceClient;
+    public LeaveRequestServiceImpl(UserClient userClient, RabbitTemplate rabbitTemplate) {
+        this.userClient = userClient;
         this.rabbitTemplate = rabbitTemplate;
     }
 
@@ -42,7 +42,7 @@ public class LeaveRequestServiceImpl
     public Page<LeaveRequest> page(Integer page, Integer size, String status) {
         LambdaQueryWrapper<LeaveRequest> qw = new LambdaQueryWrapper<>();
         Long userId = UserContext.getUserId();
-        String roles = UserContext.getRoles();
+        String roles = UserContext.getRole();
 
         if (roles != null && (roles.contains("STUDENT") || roles.contains("CLEANER") || roles.contains("REPAIRER"))) {
             qw.eq(LeaveRequest::getApplicantId, userId);
@@ -62,28 +62,12 @@ public class LeaveRequestServiceImpl
         LeaveRequest req = BeanUtil.copyProperties(dto, LeaveRequest.class);
         Long applicantId = UserContext.getUserId();
         req.setApplicantId(applicantId);
-        req.setApplicantType(resolveApplicantType(UserContext.getRoles()));
+        req.setApplicantName(resolveApplicantName(applicantId));
+        req.setApplicantType(resolveApplicantType(UserContext.getRole()));
         req.setStatus(LeaveStatus.PENDING.getCode());
         save(req);
 
-        // 保洁人员请假后，自动向考勤表写入"请假"状态记录
-        if (isCleaner(UserContext.getRoles())) {
-            LeaveAttendanceDTO attendanceDTO = LeaveAttendanceDTO.builder()
-                    .workerId(applicantId)
-                    .campusId(dto.getCampusId())
-                    .startDate(dto.getStartTime().toLocalDate())
-                    .endDate(dto.getEndTime().toLocalDate())
-                    .remark("请假：" + dto.getLeaveType())
-                    .build();
-            attendanceClient.addLeaveRecord(attendanceDTO);
-        }
-
         sendLeaveEvent(req, "SUBMITTED");
-    }
-
-    /** 判断是否保洁人员 */
-    private boolean isCleaner(String roles) {
-        return roles != null && roles.contains("CLEANER");
     }
 
     /** 根据角色推断申请人类型 */
@@ -97,6 +81,17 @@ public class LeaveRequestServiceImpl
         return null;
     }
 
+    /** 查询申请人姓名 */
+    private String resolveApplicantName(Long applicantId) {
+        try {
+            UserSimpleInfo user = userClient.getUserInfoById(applicantId);
+            return user != null ? user.getRealName() : null;
+        } catch (Exception e) {
+            log.warn("查询申请人姓名失败, applicantId={}", applicantId, e);
+            return null;
+        }
+    }
+
 
     /** 发送请假事件到 MQ */
     private void sendLeaveEvent(LeaveRequest req, String eventType) {
@@ -104,6 +99,7 @@ public class LeaveRequestServiceImpl
             LeaveEvent event = LeaveEvent.builder()
                     .leaveId(req.getId())
                     .applicantId(req.getApplicantId())
+                    .applicantName(req.getApplicantName())
                     .applicantType(req.getApplicantType())
                     .campusId(req.getCampusId())
                     .leaveType(req.getLeaveType())
@@ -137,7 +133,7 @@ public class LeaveRequestServiceImpl
         req.setApproveTime(LocalDateTime.now());
         req.setApproveOpinion(opinion);
         updateById(req);
-        sendLeaveEvent(req, "APPROVED");
+        sendLeavegiEvent(req, "APPROVED");
     }
 
     @Override

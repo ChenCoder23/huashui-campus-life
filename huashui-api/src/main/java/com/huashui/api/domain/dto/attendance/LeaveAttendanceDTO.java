@@ -19,6 +19,9 @@ public class LeaveAttendanceDTO {
     /** 工作人员ID（保洁员 = 请假申请人ID） */
     private Long workerId;
 
+    /** 工作人员姓名快照 */
+    private String workerName;
+
     /** 校区ID */
     private Long campusId;
 

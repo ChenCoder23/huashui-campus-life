@@ -22,6 +22,9 @@ public class LeaveEvent {
     /** 申请人ID */
     private Long applicantId;
 
+    /** 申请人姓名（冗余） */
+    private String applicantName;
+
     /** 申请人类型（STUDENT/CLEANER/REPAIRER） */
     private String applicantType;
 
