@@ -12,7 +12,9 @@ services:
     command: redis-server --appendonly yes
 
   rabbitmq:
-    image: rabbitmq:3.13-management-alpine
+    build:
+      context: ./rabbitmq
+    image: huashui-rabbitmq:3.13-management-delayed
     container_name: huashui_rabbitmq
     ports:
       - "5672:5672"
