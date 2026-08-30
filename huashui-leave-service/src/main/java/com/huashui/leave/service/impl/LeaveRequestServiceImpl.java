@@ -17,6 +17,7 @@ import com.huashui.leave.enums.LeaveStatus;
 import com.huashui.leave.mapper.LeaveRequestMapper;
 import com.huashui.leave.service.LeaveRequestService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.connection.CorrelationData;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -114,7 +115,9 @@ public class LeaveRequestServiceImpl
                 case "CANCELLED" -> MQConstants.LEAVE_CANCELLED_KEY;
                 default -> MQConstants.LEAVE_SUBMITTED_KEY;
             };
-            rabbitTemplate.convertAndSend(MQConstants.TOPIC_EXCHANGE, routingKey, event);
+            CorrelationData correlationData = new CorrelationData("leave:" + req.getId() + ":" + eventType);
+            rabbitTemplate.convertAndSend(MQConstants.TOPIC_EXCHANGE, routingKey, event, correlationData);
+            log.info("请假事件发送成功, leaveId={}, eventType={}, routingKey={}", req.getId(), eventType, routingKey);
         } catch (Exception e) {
             log.error("发送请假事件失败, leaveId={}, eventType={}", req.getId(), eventType, e);
         }
@@ -133,7 +136,7 @@ public class LeaveRequestServiceImpl
         req.setApproveTime(LocalDateTime.now());
         req.setApproveOpinion(opinion);
         updateById(req);
-        sendLeavegiEvent(req, "APPROVED");
+        sendLeaveEvent(req, "APPROVED");
     }
 
     @Override
