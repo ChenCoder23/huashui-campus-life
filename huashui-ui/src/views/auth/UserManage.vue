@@ -7,7 +7,7 @@ const activeRole = ref('DORM_MANAGER')
 const rows = ref<any[]>([])
 const total = ref(0)
 const loading = ref(false)
-const query = reactive({ pageNum: 1, pageSize: 10, role: activeRole.value, keyword: '' })
+const query = reactive({ pageNum: 1, pageSize: 10, roleName: '', keyword: '' })
 const createVisible = ref(false)
 const resetVisible = ref(false)
 const currentUser = ref<any>(null)
@@ -31,10 +31,16 @@ const roleMap: Record<string, string> = {
   CLEANER: '清洁工'
 }
 
+const roleNameMap: Record<string, string> = {
+  DORM_MANAGER: '宿舍管理员',
+  REPAIRER: '维修工',
+  CLEANER: '保洁'
+}
+
 async function load() {
   loading.value = true
   try {
-    query.role = activeRole.value
+    query.roleName = roleNameMap[activeRole.value]
     const raw: any = await authApi.adminUserPage({ ...query })
     const body = raw?.data ?? raw
     rows.value = body?.records ?? []
@@ -138,6 +144,11 @@ onMounted(load)
 
       <el-table :data="rows" border stripe v-loading="loading">
         <el-table-column prop="id" label="编号" width="80" />
+        <el-table-column label="头像" width="80">
+          <template #default="{ row }">
+            <el-avatar :src="row.avatar" :size="36" />
+          </template>
+        </el-table-column>
         <el-table-column prop="username" label="账号" />
         <el-table-column prop="realName" label="姓名" />
         <el-table-column prop="phone" label="手机号" />

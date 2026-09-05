@@ -14,5 +14,4 @@ public interface SysUserMapper extends BaseMapper<SysUser> {
 
     List<CleanerSimpleVO> selectCleanerByRole(String role);
 
-    Page<SysUser> selectUserPageByRole(Page<SysUser> page, @Param("roleCode") String roleCode, @Param("keyword") String keyword);
 }

@@ -1,14 +1,16 @@
 package com.huashui.auth.controller;
 
 import cn.hutool.crypto.digest.BCrypt;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.huashui.auth.domain.dto.CreateStaffDTO;
+import com.huashui.auth.domain.dto.AdminUserPageDTO;
+import com.huashui.auth.domain.vo.AdminUserVO;
 import com.huashui.auth.domain.pojo.SysRole;
 import com.huashui.auth.domain.pojo.SysUser;
 import com.huashui.auth.domain.pojo.SysUserRole;
 import com.huashui.auth.mapper.SysRoleMapper;
 import com.huashui.auth.mapper.SysUserMapper;
 import com.huashui.auth.mapper.SysUserRoleMapper;
+import com.huashui.auth.service.AdminUserService;
 import com.huashui.common.enums.RoleCodeType;
 import com.huashui.common.enums.Status;
 import com.huashui.common.exception.BusinessException;
@@ -28,15 +30,11 @@ public class AdminUserController {
     private final SysUserMapper userMapper;
     private final SysRoleMapper roleMapper;
     private final SysUserRoleMapper userRoleMapper;
+    private final AdminUserService adminUserService;
 
     @GetMapping("/page")
-    public Result<PageResult<SysUser>> page(
-            @RequestParam String role,
-            @RequestParam(defaultValue = "1") long pageNum,
-            @RequestParam(defaultValue = "10") long pageSize,
-            @RequestParam(required = false) String keyword) {
-        Page<SysUser> page = userMapper.selectUserPageByRole(new Page<>(pageNum, pageSize), role, keyword);
-        return Result.ok(PageResult.of(page.getTotal(), page.getPages(), page.getSize(), page.getRecords()));
+    public Result<PageResult<AdminUserVO>> page(@Valid AdminUserPageDTO dto) {
+        return Result.ok(adminUserService.page(dto));
     }
 
     @PostMapping
