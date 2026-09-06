@@ -5,6 +5,12 @@ spring:
   application:
     name: huashui-attendance-service
 
+  rabbitmq:
+    host: 127.0.0.1
+    port: 5672
+    username: huashuiNB666
+    password: huashuiNB666pw
+
   config:
     import:
       - nacos:shared-mysql.yml?group=DEFAULT_GROUP&refresh-enabled=true

@@ -9,6 +9,7 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.rabbit.listener.RabbitListenerContainerFactory;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.amqp.support.converter.MessageConverter;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -25,13 +26,16 @@ public class RabbitConfig {
     // ========== RabbitMQ 连接 ==========
 
     @Bean
-    public ConnectionFactory connectionFactory() {
-        CachingConnectionFactory factory = new CachingConnectionFactory();
-        factory.setHost("172.25.118.113");
-        factory.setPort(5672);
-        factory.setUsername("huashuiNB666");
-        factory.setPassword("huashuiNB666pw");  // 改成你的密码
-        factory.setVirtualHost("/");
+    public ConnectionFactory connectionFactory(
+            @Value("${spring.rabbitmq.host:127.0.0.1}") String host,
+            @Value("${spring.rabbitmq.port:5672}") int port,
+            @Value("${spring.rabbitmq.username:guest}") String username,
+            @Value("${spring.rabbitmq.password:guest}") String password,
+            @Value("${spring.rabbitmq.virtual-host:/}") String virtualHost) {
+        CachingConnectionFactory factory = new CachingConnectionFactory(host, port);
+        factory.setUsername(username);
+        factory.setPassword(password);
+        factory.setVirtualHost(virtualHost);
         // 开启 Publisher Confirm
         factory.setPublisherConfirmType(CachingConnectionFactory.ConfirmType.CORRELATED);
         // 开启 Publisher Returns（消息无法路由时回调）
