@@ -90,6 +90,15 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     }
 
     @Override
+    public List<UserSimpleInfo> getUserInfoListByRealName(String realName) {
+        List<SysUser> users = lambdaQuery()
+                .eq(SysUser::getRealName, realName)
+                .eq(SysUser::getStatus, Status.ENABLED)
+                .list();
+        return BeanUtil.copyToList(users, UserSimpleInfo.class);
+    }
+
+    @Override
     public void updateAvatar(Long userId, String avatarUrl) {
         lambdaUpdate()
                 .eq(SysUser::getId, userId)

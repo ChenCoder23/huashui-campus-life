@@ -21,6 +21,9 @@ public interface UserClient {
     @GetMapping("/user/inner/list")
     List<UserSimpleInfo> getUserInfoList(@RequestParam List<Long> userIds);
 
+    @GetMapping("/user/inner/listByRealName")
+    List<UserSimpleInfo> listUserInfoByRealName(@RequestParam("realName") String realName);
+
     @GetMapping("/user/inner/user/listByRole")
     Result<List<CleanerSimpleVO>> listByRole(@RequestParam("role") String role);
 

@@ -10,6 +10,7 @@ const campuses = ref<any[]>([])
 const buildings = ref<any[]>([])
 const dialogVisible = ref(false)
 const editId = ref<number | null>(null)
+const originalRoomNumber = ref('')
 
 const query = reactive<any>({
   pageNum: 1,
@@ -72,9 +73,15 @@ function openCreate() {
 }
 
 function openEdit(row: any) {
-  editId.value = row.id
+  const buildingsByName = buildings.value.filter((item: any) => item.buildingName === row.buildingName)
+  if (buildingsByName.length !== 1) {
+    ElMessage.warning('房间所属楼栋不唯一，请先选择校区')
+    return
+  }
+  editId.value = buildingsByName[0].id
+  originalRoomNumber.value = row.roomNumber
   Object.assign(form, {
-    buildingId: row.buildingId,
+    buildingId: buildingsByName[0].id,
     roomNumber: row.roomNumber,
     floorNumber: row.floorNumber,
     roomType: row.roomType || 'FOUR',
@@ -91,7 +98,11 @@ async function submit() {
   }
   try {
     if (editId.value === null) await dormitoryApi.createRoom({ ...form })
-    else await dormitoryApi.updateRoom(editId.value, { ...form })
+    else await dormitoryApi.updateRoomByBusinessKey({
+      originalBuildingId: editId.value,
+      originalRoomNumber: originalRoomNumber.value,
+      ...form
+    })
     ElMessage.success(editId.value === null ? '新增成功' : '保存成功')
     dialogVisible.value = false
     load()
@@ -100,8 +111,16 @@ async function submit() {
 
 async function remove(row: any) {
   await ElMessageBox.confirm('确定删除该房间吗？', '提示', { type: 'warning' })
+  const buildingsByName = buildings.value.filter((item: any) => item.buildingName === row.buildingName)
+  if (buildingsByName.length !== 1) {
+    ElMessage.warning('房间所属楼栋不唯一，请先选择校区')
+    return
+  }
   try {
-    await dormitoryApi.deleteRoom(row.id)
+    await dormitoryApi.deleteRoomByBusinessKey({
+      buildingId: buildingsByName[0].id,
+      roomNumber: row.roomNumber
+    })
     ElMessage.success('删除成功')
     load()
   } catch {}
@@ -171,8 +190,7 @@ onMounted(() => {
       </el-form>
 
       <el-table :data="rows" border stripe v-loading="loading">
-        <el-table-column prop="id" label="ID" width="70" />
-        <el-table-column prop="buildingId" label="楼栋ID" />
+        <el-table-column prop="buildingName" label="楼栋名称" />
         <el-table-column prop="roomNumber" label="房间号" />
         <el-table-column prop="floorNumber" label="楼层" />
         <el-table-column label="房型">

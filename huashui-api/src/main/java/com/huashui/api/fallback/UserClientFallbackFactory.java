@@ -36,6 +36,11 @@ public class UserClientFallbackFactory
             }
 
             @Override
+            public List<UserSimpleInfo> listUserInfoByRealName(String realName) {
+                return List.of();
+            }
+
+            @Override
             public Result<List<CleanerSimpleVO>> listByRole(String role) {
                 return null;
             }

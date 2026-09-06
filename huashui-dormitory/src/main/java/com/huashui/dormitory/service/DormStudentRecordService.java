@@ -2,13 +2,15 @@ package com.huashui.dormitory.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.huashui.dormitory.domain.dto.DormRecordPageDTO;
 import com.huashui.dormitory.domain.dto.RecordAdjustDTO;
 import com.huashui.dormitory.domain.dto.RecordAssignDTO;
 import com.huashui.dormitory.domain.pojo.DormStudentRecord;
+import com.huashui.dormitory.domain.vo.DormStudentRecordPageVO;
 
 public interface DormStudentRecordService extends IService<DormStudentRecord> {
 
-    Page<DormStudentRecord> page(Integer page, Integer size, Long buildingId, Long studentId);
+    Page<DormStudentRecordPageVO> page(DormRecordPageDTO dto);
 
     void assign(RecordAssignDTO dto);
 

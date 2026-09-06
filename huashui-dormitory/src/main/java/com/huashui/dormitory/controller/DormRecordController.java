@@ -5,6 +5,8 @@ import com.huashui.common.response.Result;
 import com.huashui.dormitory.domain.dto.RecordAdjustDTO;
 import com.huashui.dormitory.domain.dto.RecordAssignDTO;
 import com.huashui.dormitory.domain.pojo.DormStudentRecord;
+import com.huashui.dormitory.domain.dto.DormRecordPageDTO;
+import com.huashui.dormitory.domain.vo.DormStudentRecordPageVO;
 import com.huashui.dormitory.service.DormStudentRecordService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -22,13 +24,8 @@ public class DormRecordController {
 
     @GetMapping
     @Operation(summary = "住宿记录列表（分页）")
-    public Result<Page<DormStudentRecord>> list(
-            // todo 使用dto
-            @RequestParam(defaultValue = "1") Integer page,
-            @RequestParam(defaultValue = "10") Integer size,
-            @RequestParam(required = false) Long buildingId,
-            @RequestParam(required = false) Long studentId) {
-        return Result.ok(recordService.page(page, size, buildingId, studentId));
+    public Result<Page<DormStudentRecordPageVO>> list(DormRecordPageDTO dto) {
+        return Result.ok(recordService.page(dto));
     }
 
     @PostMapping("/assign")

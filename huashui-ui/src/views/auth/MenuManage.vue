@@ -62,12 +62,12 @@ onMounted(load)
       <el-button type="primary" @click="openCreate(0)">新增根菜单</el-button>
       <el-table :data="rows" row-key="id" border v-loading="loading" style="margin-top: 14px">
         <el-table-column prop="menuName" label="菜单名称" min-width="160" />
-        <el-table-column prop="menuType" label="类型" width="100" />
+        <el-table-column prop="menuType" label="类型" width="100">
+          <template #default="{ row }">{{ { DIRECTORY: '目录', MENU: '菜单', BUTTON: '按钮' }[row.menuType] || row.menuType }}</template>
+        </el-table-column>
         <el-table-column prop="path" label="路由" min-width="140" />
-        <el-table-column prop="component" label="组件" min-width="140" />
         <el-table-column prop="icon" label="图标" width="100" />
         <el-table-column prop="permission" label="权限标识" min-width="140" />
-        <el-table-column prop="sortOrder" label="排序" width="80" />
         <el-table-column prop="status" label="状态" width="80">
           <template #default="{ row }">{{ row.status === 1 ? '启用' : '停用' }}</template>
         </el-table-column>
