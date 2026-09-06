@@ -37,6 +37,11 @@ public class userClient {
         return userService.getUserInfoList(userIds);
     }
 
+    @GetMapping("/listByRealName")
+    public List<UserSimpleInfo> getUserInfoListByRealName(@RequestParam("realName") String realName) {
+        return userService.getUserInfoListByRealName(realName);
+    }
+
     /**
      * 根据角色查询用户
      *

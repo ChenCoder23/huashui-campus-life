@@ -1,5 +1,6 @@
 package com.huashui.dormitory.Enum;
 
+import com.baomidou.mybatisplus.annotation.EnumValue;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -18,6 +19,8 @@ public enum DormRecordStatus {
     @Schema(description = "在住")
     LIVING(1, "在住");
 
+
+    @EnumValue
     private final Integer code;
 
     private final String desc;

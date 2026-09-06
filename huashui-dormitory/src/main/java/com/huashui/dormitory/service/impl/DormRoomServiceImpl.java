@@ -14,12 +14,14 @@ import com.huashui.dormitory.Enum.BedStatus;
 import com.huashui.dormitory.Enum.RoomStatus;
 import com.huashui.dormitory.Enum.RoomType;
 import com.huashui.dormitory.domain.dto.RoomBatchCreateDTO;
+import com.huashui.dormitory.domain.dto.RoomBusinessUpdateDTO;
 import com.huashui.dormitory.domain.dto.RoomCreateDTO;
 import com.huashui.dormitory.domain.dto.RoomPageDTO;
 import com.huashui.dormitory.domain.dto.RoomUpdateDTO;
 import com.huashui.dormitory.domain.pojo.DormBed;
 import com.huashui.dormitory.domain.pojo.DormBuilding;
 import com.huashui.dormitory.domain.pojo.DormRoom;
+import com.huashui.dormitory.domain.vo.RoomPageVO;
 import com.huashui.dormitory.mapper.DormBedMapper;
 import com.huashui.dormitory.mapper.DormBuildingMapper;
 import com.huashui.dormitory.mapper.DormRoomMapper;
@@ -31,6 +33,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -124,7 +130,7 @@ public class DormRoomServiceImpl extends ServiceImpl<DormRoomMapper, DormRoom> i
     }
 
     @Override
-    public PageResult<DormRoom> getRoomPage(RoomPageDTO dto) {
+    public PageResult<RoomPageVO> getRoomPage(RoomPageDTO dto) {
         LambdaQueryWrapper<DormRoom> wrapper = new LambdaQueryWrapper<>();
 
         if (dto.getCampusId() != null) {
@@ -150,7 +156,48 @@ public class DormRoomServiceImpl extends ServiceImpl<DormRoomMapper, DormRoom> i
                 .orderByAsc(DormRoom::getRoomNumber);
 
         Page<DormRoom> page = page(dto.toPage(), wrapper);
-        return PageResult.of(page.getTotal(), page.getPages(), page.getSize(), page.getRecords());
+        Map<Long, String> buildingNameMap = getBuildingNameMap(page.getRecords());
+        List<RoomPageVO> records = page.getRecords().stream().map(room -> {
+            RoomPageVO vo = new RoomPageVO();
+            BeanUtils.copyProperties(room, vo);
+            vo.setBuildingName(buildingNameMap.get(room.getBuildingId()));
+            return vo;
+        }).toList();
+        return PageResult.of(page.getTotal(), page.getPages(), page.getSize(), records);
+    }
+
+    private Map<Long, String> getBuildingNameMap(List<DormRoom> rooms) {
+        List<Long> buildingIds = rooms.stream()
+                .map(DormRoom::getBuildingId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+        if (buildingIds.isEmpty()) return Collections.emptyMap();
+        return buildingMapper.selectByIds(buildingIds).stream()
+                .collect(Collectors.toMap(DormBuilding::getId, DormBuilding::getBuildingName, (left, right) -> left));
+    }
+
+    @Override
+    @Transactional
+    public void updateByBusinessKey(RoomBusinessUpdateDTO dto) {
+        DormRoom room = getByBusinessKey(dto.getOriginalBuildingId(), dto.getOriginalRoomNumber());
+        update(room.getId(), dto);
+    }
+
+    @Override
+    @Transactional
+    public void deleteByBusinessKey(Long buildingId, String roomNumber) {
+        DormRoom room = getByBusinessKey(buildingId, roomNumber);
+        deleteById(room.getId());
+    }
+
+    private DormRoom getByBusinessKey(Long buildingId, String roomNumber) {
+        DormRoom room = getOne(new LambdaQueryWrapper<DormRoom>()
+                .eq(DormRoom::getBuildingId, buildingId)
+                .eq(DormRoom::getRoomNumber, roomNumber)
+                .last("LIMIT 1"));
+        if (room == null) throw new BusinessException("房间不存在");
+        return room;
     }
 
     private RoomStatus parseRoomStatus(String status) {

@@ -26,27 +26,25 @@ public class SemesterUtil {
      * @return 当前学期
      */
     public static String getCurrentSemester() {
+        return getSemester(LocalDate.now());
+    }
 
-        LocalDate now = LocalDate.now();
+    public static String getSemester(LocalDate date) {
+        if (date == null) {
+            return null;
+        }
 
-        int year = now.getYear();
-
-        int month = now.getMonthValue();
-
+        int year = date.getYear();
+        int month = date.getMonthValue();
 
         if (month >= 2 && month <= 7) {
-
             return year + "_1";
-
-        } else {
-
-            // 8-12月属于当前年份第二学期
-            // 1月属于上一年份第二学期
-            if (month == 1) {
-                return (year - 1) + "_2";
-            }
-
-            return year + "_2";
         }
+
+        if (month == 1) {
+            return (year - 1) + "_2";
+        }
+
+        return year + "_2";
     }
 }

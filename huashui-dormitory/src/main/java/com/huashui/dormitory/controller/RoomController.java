@@ -4,10 +4,12 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.huashui.common.response.PageResult;
 import com.huashui.common.response.Result;
 import com.huashui.dormitory.domain.dto.RoomBatchCreateDTO;
+import com.huashui.dormitory.domain.dto.RoomBusinessUpdateDTO;
 import com.huashui.dormitory.domain.dto.RoomCreateDTO;
 import com.huashui.dormitory.domain.dto.RoomPageDTO;
 import com.huashui.dormitory.domain.dto.RoomUpdateDTO;
 import com.huashui.dormitory.domain.pojo.DormRoom;
+import com.huashui.dormitory.domain.vo.RoomPageVO;
 import com.huashui.dormitory.service.DormRoomService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -25,8 +27,24 @@ public class RoomController {
 
     @GetMapping
     @Operation(summary = "房间列表（分页）")
-    public Result<PageResult<DormRoom>> list(RoomPageDTO dto) {
+    public Result<PageResult<RoomPageVO>> list(RoomPageDTO dto) {
         return Result.ok(roomService.getRoomPage(dto));
+    }
+
+    @PutMapping("/business-key")
+    @Operation(summary = "按业务键编辑房间")
+    public Result<Void> updateByBusinessKey(@Valid @RequestBody RoomBusinessUpdateDTO dto) {
+        roomService.updateByBusinessKey(dto);
+        return Result.ok();
+    }
+
+    @DeleteMapping("/business-key")
+    @Operation(summary = "按业务键删除房间")
+    public Result<Void> deleteByBusinessKey(
+            @RequestParam Long buildingId,
+            @RequestParam String roomNumber) {
+        roomService.deleteByBusinessKey(buildingId, roomNumber);
+        return Result.ok();
     }
 
     @PostMapping

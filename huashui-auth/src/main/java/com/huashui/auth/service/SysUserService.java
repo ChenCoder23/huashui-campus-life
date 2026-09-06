@@ -23,6 +23,8 @@ public interface SysUserService extends IService<SysUser> {
 
     List<UserSimpleInfo> getUserInfoList(List<Long> userIds);
 
+    List<UserSimpleInfo> getUserInfoListByRealName(String realName);
+
     void updateAvatar(Long userId, String avatarUrl);
 
     void updatePassword(Long id, String password);
