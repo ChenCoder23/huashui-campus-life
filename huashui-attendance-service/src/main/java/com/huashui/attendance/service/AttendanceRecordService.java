@@ -10,9 +10,12 @@ import com.huashui.attendance.domain.vo.AttendanceVO;
 import com.huashui.common.response.PageResult;
 
 import java.util.List;
+import java.time.LocalDate;
 
 public interface AttendanceRecordService extends IService<AttendanceRecord> {
 
+
+    List<Long> getExistingWorkerIds(LocalDate attendanceDate);
 
     void checkIn(CheckInDTO dto);
 

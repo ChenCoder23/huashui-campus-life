@@ -45,6 +45,11 @@ hs:
   jdbc:
     db: huashui_attendance
 
+attendance:
+  generate:
+    batch-size: 500
+    parallelism: 4
+
 #设置日志级别
 logging:
   level:

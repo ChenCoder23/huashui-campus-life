@@ -37,6 +37,11 @@ public class AttendanceRecordServiceImpl extends ServiceImpl<AttendanceRecordMap
     private final SystemClient systemClient;
 
 
+    @Override
+    public List<Long> getExistingWorkerIds(LocalDate attendanceDate) {
+        return baseMapper.selectExistingWorkerIds(attendanceDate);
+    }
+
     //清洁工的每日签到
     @Override
     @Transactional
