@@ -152,7 +152,6 @@ onMounted(() => { resetForm(); loadCampus(); load() })
         <el-form-item><el-button type="primary" @click="load">查询</el-button><el-button type="primary" @click="openCreate">新增楼栋</el-button></el-form-item>
       </el-form>
       <el-table :data="rows" border stripe v-loading="loading">
-        <el-table-column prop="id" label="编号" width="80" />
         <el-table-column prop="campusName" label="校区" />
         <el-table-column prop="area" label="区域" />
         <el-table-column prop="buildingName" label="楼栋名称" />

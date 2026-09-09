@@ -143,7 +143,6 @@ onMounted(load)
       </el-form>
 
       <el-table :data="rows" border stripe v-loading="loading">
-        <el-table-column prop="id" label="编号" width="80" />
         <el-table-column label="头像" width="80">
           <template #default="{ row }">
             <el-avatar :src="row.avatar" :size="36" />

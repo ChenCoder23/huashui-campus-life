@@ -96,11 +96,9 @@ onMounted(load)
       </div>
 
       <el-table :data="rows" border stripe v-loading="loading">
-        <el-table-column prop="id" label="ID" width="70" />
         <el-table-column prop="campusName" label="校区名称" />
         <el-table-column prop="campusCode" label="校区编码" />
         <el-table-column prop="address" label="地址" />
-        <el-table-column prop="sortOrder" label="排序" width="80" />
         <el-table-column label="状态" width="90">
           <template #default="{ row }">
             <el-tag :type="row.status === 'ENABLED' || row.status === 1 ? 'success' : 'info'">

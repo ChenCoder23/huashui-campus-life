@@ -54,7 +54,6 @@ onMounted(load)
         <el-button type="primary" v-if="isStaff" @click="createVisible=true">申请请假</el-button>
       </el-form>
       <el-table :data="rows" border stripe v-loading="loading">
-        <el-table-column prop="id" label="ID" width="70" />
         <el-table-column prop="applicantName" label="申请人" />
         <el-table-column prop="leaveType" label="类型" />
         <el-table-column prop="startTime" label="开始时间" />

@@ -46,7 +46,6 @@ onMounted(load)
         <el-button type="primary" @click="load">查询</el-button>
       </el-form>
       <el-table :data="rows" border stripe v-loading="loading">
-        <el-table-column prop="id" label="ID" width="70" />
         <el-table-column prop="workerId" label="员工ID" />
         <el-table-column prop="workerName" label="姓名" />
         <el-table-column prop="attendanceDate" label="日期" />
